@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  password     String
+  createdAt    DateTime      @default(now())
+  activityLogs ActivityLog[]
+  boards       Board[]
+  boardMembers BoardMember[]
+  comments     Comment[]
+}
+
+model Board {
+  id        String        @id @default(cuid())
+  title     String
+  emoji     String?       @default("📋")
+  userId    String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  members   BoardMember[]
+  columns   Column[]
+}
+
+model BoardMember {
+  id      String    @id @default(cuid())
+  role    BoardRole @default(EDITOR)
+  userId  String
+  boardId String
+  board   Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, boardId])
+}
+
+model Column {
+  id      String @id @default(cuid())
+  title   String
+  order   Int
+  color   String @default("#7c3aed")
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+}
+
+model Task {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  priority     Priority      @default(MEDIUM)
+  order        Int
+  dueDate      DateTime?
+  assignee     String?
+  storyPoints  Int?
+  columnId     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  activityLogs ActivityLog[]
+  comments     Comment[]
+  labels       Label[]
+  subtasks     Subtask[]
+  column       Column        @relation(fields: [columnId], references: [id], onDelete: Cascade)
+}
+
+model Label {
+  id     String @id @default(cuid())
+  name   String
+  color  String @default("#7c3aed")
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Subtask {
+  id        String  @id @default(cuid())
+  title     String
+  completed Boolean @default(false)
+  order     Int
+  taskId    String
+  task      Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  taskId    String
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String
+  taskId    String?
+  boardId   String?
+  createdAt DateTime @default(now())
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum BoardRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
