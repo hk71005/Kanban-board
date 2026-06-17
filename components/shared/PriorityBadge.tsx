@@ -1,30 +1,24 @@
 import { Priority } from '@prisma/client';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface PriorityBadgeProps {
   priority: Priority;
 }
 
-const priorityMap: Record<
-  Priority,
-  { label: string; className: string }
-> = {
-  LOW: { label: 'Low', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  MEDIUM: { label: 'Medium', className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  HIGH: { label: 'High', className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-  URGENT: { label: 'Urgent', className: 'bg-red-500/20 text-red-400 border-red-500/30' },
+const priorityConfig: Record<Priority, { label: string; dot: string; text: string }> = {
+  LOW:    { label: 'Low',    dot: '#60a5fa', text: 'text-muted-foreground/70' },
+  MEDIUM: { label: 'Medium', dot: '#fbbf24', text: 'text-muted-foreground' },
+  HIGH:   { label: 'High',   dot: '#f97316', text: 'text-orange-500' },
+  URGENT: { label: 'Urgent', dot: '#ef4444', text: 'text-red-500' },
 };
 
 export default function PriorityBadge({ priority }: PriorityBadgeProps) {
-  const { label, className } = priorityMap[priority] || priorityMap.MEDIUM;
+  const { label, dot, text } = priorityConfig[priority] ?? priorityConfig.MEDIUM;
 
   return (
-    <Badge
-      variant="outline"
-      className={cn('text-xs font-semibold', className)}
-    >
+    <span className={cn('inline-flex items-center gap-1.5 text-xs', text)}>
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
       {label}
-    </Badge>
+    </span>
   );
 }

@@ -22,12 +22,14 @@ async function checkTaskPermissions(taskId: string) {
   }
 
   const board = task.column.board;
-  const isOwnerOrMember =
-    board.userId === session.user.id ||
-    board.members.some((m) => m.userId === session.user.id);
+  const isOwner = board.userId === session.user.id;
+  const member = board.members.find((m) => m.userId === session.user.id);
 
-  if (!isOwnerOrMember) {
+  if (!isOwner && !member) {
     throw new Error('Unauthorized');
+  }
+  if (!isOwner && member?.role === 'VIEWER') {
+    throw new Error('Viewers cannot add comments');
   }
 
   return { session, task, board };

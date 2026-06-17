@@ -39,24 +39,36 @@ export default function TaskDialog() {
 
   return (
     <Dialog open={!!activeTask} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+      {/*
+        sm:max-w-4xl overrides the component's default sm:max-w-sm (384px) so
+        the dialog is actually wide on desktop. flex flex-col overrides the
+        component's default `grid` display so children stack vertically and
+        flex-1 on the inner grid works correctly.
+      */}
+      <DialogContent className="sm:max-w-4xl h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="truncate pr-14">{activeTask.title}</DialogTitle>
+          {/* sr-only: provides accessible dialog label without duplicating the
+              editable title Input rendered at the top of TaskForm. */}
+          <DialogTitle className="sr-only">{activeTask.title}</DialogTitle>
         </DialogHeader>
-        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden md:grid-cols-3">
-          <div className="md:col-span-2 overflow-y-auto pr-2">
+
+        <div className="grid flex-1 min-h-0 grid-cols-1 gap-6 overflow-hidden md:grid-cols-[3fr_2fr]">
+          {/* Left: task form — scrolls independently */}
+          <div className="min-h-0 overflow-y-auto pr-1">
             <TaskForm task={activeTask} />
           </div>
-          <div className="overflow-y-auto pr-2">
-            <Tabs defaultValue="comments" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+
+          {/* Right: comments / activity — flex column so Tabs fills height */}
+          <div className="flex min-h-0 flex-col border-l pl-4">
+            <Tabs defaultValue="comments" className="flex min-h-0 flex-1 flex-col w-full">
+              <TabsList className="grid w-full grid-cols-2 shrink-0">
                 <TabsTrigger value="comments">Comments</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
-              <TabsContent value="comments">
+              <TabsContent value="comments" className="mt-3 min-h-0 flex-1 overflow-y-auto">
                 <CommentSection task={activeTask} />
               </TabsContent>
-              <TabsContent value="activity">
+              <TabsContent value="activity" className="mt-3 min-h-0 flex-1 overflow-y-auto">
                 <ActivityFeed taskId={activeTask.id} />
               </TabsContent>
             </Tabs>

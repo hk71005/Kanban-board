@@ -32,11 +32,12 @@ export default function ProgressBar() {
   }, [columns]);
 
   return (
-    <div className="flex items-center w-full gap-2 md:w-64">
-      <Progress value={progress} className="h-2" />
-      <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
-        {doneTasks} / {totalTasks}
-      </span>
+    <div className="flex flex-col gap-1 w-full md:w-52 shrink-0">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-foreground">{progress}%</span>
+        <span className="text-xs text-muted-foreground">{doneTasks}/{totalTasks} done</span>
+      </div>
+      <Progress value={progress} className="h-1.5" />
     </div>
   );
 }

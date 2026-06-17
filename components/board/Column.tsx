@@ -130,7 +130,7 @@ export default function Column({ column }: ColumnProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex flex-col w-[85vw] shrink-0 md:flex-1 md:min-w-[260px] md:w-auto h-full rounded-lg bg-surface snap-start"
+      className="flex flex-col w-[85vw] shrink-0 md:flex-1 md:min-w-[260px] md:w-auto h-full rounded-lg bg-surface snap-start ring-1 ring-black/5 dark:ring-white/[0.05]"
     >
       {/* Column Header */}
       <div
@@ -158,7 +158,7 @@ export default function Column({ column }: ColumnProps) {
           ) : (
             <span className="truncate">{column.title}</span>
           )}
-          <span className="flex items-center justify-center w-5 h-5 text-xs rounded-full bg-card text-muted-foreground shrink-0">
+          <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-muted text-muted-foreground shrink-0 min-w-[1.25rem]">
             {column.tasks.length}
           </span>
         </div>
@@ -203,8 +203,11 @@ export default function Column({ column }: ColumnProps) {
           ))}
         </SortableContext>
         {column.tasks.length === 0 && (
-          <div className="flex items-center justify-center flex-1 min-h-[80px] rounded-lg border-2 border-dashed border-muted text-sm text-muted-foreground">
-            No tasks
+          <div className="flex flex-col items-center justify-center flex-1 min-h-[120px] rounded-lg border-2 border-dashed border-muted/60 hover:border-primary/40 hover:bg-primary/5 transition-colors duration-200 gap-2 text-muted-foreground cursor-pointer group"
+            onClick={() => setIsAddingTask(true)}
+          >
+            <PlusCircle className="w-5 h-5 opacity-40 group-hover:opacity-70 transition-opacity" />
+            <span className="text-xs opacity-50 group-hover:opacity-80 transition-opacity">Drop here or add a task</span>
           </div>
         )}
       </div>
@@ -247,7 +250,7 @@ export default function Column({ column }: ColumnProps) {
         ) : (
           <Button
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start border border-dashed border-muted-foreground/20 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground transition-colors"
             onClick={() => setIsAddingTask(true)}
           >
             <PlusCircle className="w-4 h-4 mr-2" />

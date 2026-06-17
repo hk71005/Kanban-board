@@ -76,6 +76,61 @@ export async function createBoard(values: z.infer<typeof boardSchema>) {
   }
 }
 
+export async function createBoardWithTemplate(
+  values: { title: string; emoji?: string },
+  columns: { title: string; color: string; tasks: string[] }[]
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated' };
+
+  const title = values.title?.trim();
+  if (!title) return { error: 'Title is required' };
+
+  try {
+    const newBoard = await db.board.create({
+      data: {
+        title,
+        emoji: values.emoji || 'Kanban',
+        userId: session.user.id,
+        members: {
+          create: [{ userId: session.user.id, role: 'OWNER' }],
+        },
+      },
+    });
+
+    if (columns.length > 0) {
+      await db.$transaction(async (tx) => {
+        for (let i = 0; i < columns.length; i++) {
+          const col = columns[i];
+          const column = await tx.column.create({
+            data: {
+              title: col.title,
+              color: col.color,
+              order: i,
+              boardId: newBoard.id,
+            },
+          });
+          for (let j = 0; j < col.tasks.length; j++) {
+            await tx.task.create({
+              data: {
+                title: col.tasks[j],
+                priority: 'MEDIUM',
+                order: j,
+                columnId: column.id,
+              },
+            });
+          }
+        }
+      });
+    }
+
+    revalidatePath('/boards');
+    return { success: 'Board created!', boardId: newBoard.id };
+  } catch {
+    return { error: 'Failed to create board' };
+  }
+}
+
 export async function deleteBoard(boardId: string) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -130,7 +185,6 @@ export async function updateColumnOrder(
         db.column.update({ where: { id: u.id }, data: { order: u.order } })
       )
     );
-    revalidatePath(`/boards/${boardId}`);
     return { success: 'Column order updated' };
   } catch {
     return { error: 'Failed to update column order' };

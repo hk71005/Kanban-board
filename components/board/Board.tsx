@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -34,6 +34,9 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
   const { board, columns, setBoard, setCurrentUserId, setColumns, searchQuery, priorityFilters, assigneeFilter } = useBoardStore((state) => state);
   const [activeColumn, setActiveColumn] = useState<ColumnWithTasks | null>(null);
   const [activeTask, setActiveTask] = useState<TaskWithDetails | null>(null);
+  // Snapshot of columns at drag start — used to revert on server error.
+  // Cannot use `columns` at drop time because onDragOver has already mutated it.
+  const preDragColumnsRef = useRef<ColumnWithTasks[]>([]);
 
   useEffect(() => {
     setBoard(initialBoardData);
@@ -72,6 +75,7 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
   }
 
   const onDragStart = (event: DragStartEvent) => {
+    preDragColumnsRef.current = columns;
     if (event.active.data.current?.type === 'Column') {
       setActiveColumn(event.active.data.current.column);
       return;
@@ -92,10 +96,15 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
     const activeId = active.id;
     const overId = over.id;
 
-    if (activeId === overId) return;
-
     const isActiveAColumn = active.data.current?.type === 'Column';
     if (isActiveAColumn) {
+      // Guard against no-op column reorders (column dropped on itself).
+      // This check is intentionally NOT applied to task drags: onDragOver moves
+      // the task to its new column during the drag, so by the time onDragEnd
+      // fires the task is already rendered at the drop position. DnD Kit then
+      // reports over.id === active.id (the task is the top droppable under the
+      // pointer), which would trigger a false early-return and skip the DB write.
+      if (activeId === overId) return;
       const activeIndex = columns.findIndex((c) => c.id === activeId);
       const overIndex = columns.findIndex((c) => c.id === overId);
       if (activeIndex === -1 || overIndex === -1) return;
@@ -107,13 +116,32 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
       updateColumnOrder(board.id, updates).then((result) => {
         if (result?.error) {
           toast.error(result.error);
-          setColumns(columns);
+          setColumns(preDragColumnsRef.current);
         }
       });
       return;
     }
 
     // This is where we handle task drops
+
+    // Build a pre-drag position index so we can diff against the post-drag state.
+    // Excludes temp tasks (using adjusted indices) to match the same filtering
+    // applied when building the updates arrays below.
+    const preDragMap = new Map<string, { order: number; columnId: string }>();
+    for (const col of preDragColumnsRef.current) {
+      let realIndex = 0;
+      for (const t of col.tasks) {
+        if (!t.id.startsWith('temp-')) {
+          preDragMap.set(t.id, { order: realIndex, columnId: col.id });
+          realIndex++;
+        }
+      }
+    }
+    const hasChanged = (u: { id: string; order: number; columnId: string }) => {
+      const prev = preDragMap.get(u.id);
+      return !prev || prev.order !== u.order || prev.columnId !== u.columnId;
+    };
+
     const activeColumn = columns.find((col) =>
       col.tasks.some((task) => task.id === activeId)
     );
@@ -121,50 +149,79 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
       col.tasks.some((task) => task.id === overId) || col.id === overId
     );
 
-    if (!activeColumn || !overColumn) return;
+    // Cross-column moves: onDragOver already moved the task visually via setColumns,
+    // so by the time onDragEnd fires, activeColumn is null (task is in its new column).
+    // The columns state is already correct — just persist it to the server.
+    if (!activeColumn) {
+      if (!overColumn) return;
+      const updates = columns.flatMap((col) =>
+        col.tasks
+          .filter((task) => !task.id.startsWith('temp-'))
+          .map((task, index) => ({
+            id: task.id,
+            order: index,
+            columnId: col.id,
+          }))
+      ).filter(hasChanged);
+      if (updates.length > 0) {
+        const result = await updateTaskOrder(board.id, updates);
+        if (result?.error) {
+          toast.error(result.error);
+          setColumns(preDragColumnsRef.current);
+        }
+      }
+      return;
+    }
+
+    if (!overColumn) return;
 
     const activeTaskIndex = activeColumn.tasks.findIndex((t) => t.id === activeId);
     const overTaskIndex = overColumn.tasks.findIndex((t) => t.id === overId);
 
+    // Same-column reorder: onDragOver does not handle this case, so onDragEnd
+    // performs the optimistic update and persists it.
     let newColumns = [...columns];
-    let movedTask: TaskWithDetails;
 
-    // Moving within the same column
     if (activeColumn.id === overColumn.id) {
       const newTasks = arrayMove(activeColumn.tasks, activeTaskIndex, overTaskIndex);
       newColumns = newColumns.map((col) =>
         col.id === activeColumn.id ? { ...col, tasks: newTasks } : col
       );
-    } else { // Moving to a different column
-      [movedTask] = activeColumn.tasks.splice(activeTaskIndex, 1);
-      movedTask.columnId = overColumn.id;
-      
+    } else {
+      // Fallback for cross-column drops that onDragOver missed (e.g. drop on empty column).
       const targetIndex = over.data.current?.type === 'Task' ? overTaskIndex : overColumn.tasks.length;
-      overColumn.tasks.splice(targetIndex, 0, movedTask);
-
+      const movedTask = { ...activeColumn.tasks[activeTaskIndex], columnId: overColumn.id };
+      const newActiveTasks = activeColumn.tasks.filter((_, i) => i !== activeTaskIndex);
+      const newOverTasks = [
+        ...overColumn.tasks.slice(0, targetIndex),
+        movedTask,
+        ...overColumn.tasks.slice(targetIndex),
+      ];
       newColumns = newColumns.map((col) => {
-        if (col.id === activeColumn.id) return { ...col, tasks: activeColumn.tasks };
-        if (col.id === overColumn.id) return { ...col, tasks: overColumn.tasks };
+        if (col.id === activeColumn.id) return { ...col, tasks: newActiveTasks };
+        if (col.id === overColumn.id) return { ...col, tasks: newOverTasks };
         return col;
       });
     }
 
     setColumns(newColumns);
 
-    // Optimistic update done, now call server action
-    const updates = newColumns.flatMap(col => 
-      col.tasks.map((task, index) => ({
-        id: task.id,
-        order: index,
-        columnId: col.id,
-      }))
-    );
+    const updates = newColumns.flatMap((col) =>
+      col.tasks
+        .filter((task) => !task.id.startsWith('temp-'))
+        .map((task, index) => ({
+          id: task.id,
+          order: index,
+          columnId: col.id,
+        }))
+    ).filter(hasChanged);
 
-    const result = await updateTaskOrder(board.id, updates);
-    if (result?.error) {
-      toast.error(result.error);
-      // Revert state on error
-      setBoard(initialBoardData);
+    if (updates.length > 0) {
+      const result = await updateTaskOrder(board.id, updates);
+      if (result?.error) {
+        toast.error(result.error);
+        setColumns(preDragColumnsRef.current);
+      }
     }
   };
 
@@ -196,11 +253,19 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
         const activeTaskIndex = activeColumn.tasks.findIndex((t) => t.id === activeId);
         const overTaskIndex = overColumn.tasks.findIndex((t) => t.id === overId);
 
-        const newActiveColumn = { ...activeColumn };
-        const newOverColumn = { ...overColumn };
-
-        const [movedTask] = newActiveColumn.tasks.splice(activeTaskIndex, 1);
-        newOverColumn.tasks.splice(overTaskIndex, 0, movedTask);
+        const movedTask = activeColumn.tasks[activeTaskIndex];
+        const newActiveColumn = {
+          ...activeColumn,
+          tasks: activeColumn.tasks.filter((_, i) => i !== activeTaskIndex),
+        };
+        const newOverColumn = {
+          ...overColumn,
+          tasks: [
+            ...overColumn.tasks.slice(0, overTaskIndex),
+            movedTask,
+            ...overColumn.tasks.slice(overTaskIndex),
+          ],
+        };
 
         return prevColumns.map((col) => {
           if (col.id === newActiveColumn.id) return newActiveColumn;
@@ -220,12 +285,16 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
           return prevColumns;
         }
 
-        const newActiveColumn = { ...activeColumn };
-        const newOverColumn = { ...overColumn };
-
-        const activeTaskIndex = newActiveColumn.tasks.findIndex((t) => t.id === activeId);
-        const [movedTask] = newActiveColumn.tasks.splice(activeTaskIndex, 1);
-        newOverColumn.tasks.push(movedTask);
+        const activeTaskIndex = activeColumn.tasks.findIndex((t) => t.id === activeId);
+        const movedTask = activeColumn.tasks[activeTaskIndex];
+        const newActiveColumn = {
+          ...activeColumn,
+          tasks: activeColumn.tasks.filter((_, i) => i !== activeTaskIndex),
+        };
+        const newOverColumn = {
+          ...overColumn,
+          tasks: [...overColumn.tasks, movedTask],
+        };
 
         return prevColumns.map((col) => {
           if (col.id === newActiveColumn.id) return newActiveColumn;

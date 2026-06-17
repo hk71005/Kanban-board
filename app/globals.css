@@ -6,7 +6,7 @@
 @layer base {
   :root {
     /* LIGHT THEME */
-    --background: 0 0% 100%;
+    --background: 240 5% 97%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
@@ -39,7 +39,7 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 262 84% 58%;
-    --surface: 240 5% 96%;
+    --surface: 240 5% 92%;
   }
 
   .dark {

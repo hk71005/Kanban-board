@@ -12,8 +12,10 @@ model User {
   email        String        @unique
   name         String?
   password     String
-  createdAt    DateTime      @default(now())
-  activityLogs ActivityLog[]
+  createdAt        DateTime      @default(now())
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  activityLogs     ActivityLog[]
   boards       Board[]
   boardMembers BoardMember[]
   comments     Comment[]

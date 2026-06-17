@@ -1,11 +1,16 @@
 import { getServerSession, type NextAuthOptions } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import Google from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import db from './db';
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -42,9 +47,34 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async signIn({ account, profile }) {
+      if (account?.provider === 'google') {
+        if (!profile?.email) return false;
+        await db.user.upsert({
+          where: { email: profile.email },
+          update: { name: profile.name ?? null },
+          create: {
+            email: profile.email,
+            name: profile.name ?? null,
+            // Bcrypt hash of an unknown random UUID — satisfies the non-nullable
+            // schema column and ensures bcrypt.compare always returns false cleanly,
+            // making credential login impossible for Google-only accounts.
+            password: await bcrypt.hash(crypto.randomUUID(), 10),
+          },
+        });
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
+      }
+      // For Google sign-ins, user.id is Google's own ID, not our DB cuid.
+      // account is only present on the initial sign-in, so this DB lookup
+      // runs once per new Google session, never on token refreshes.
+      if (account?.provider === 'google' && token.email) {
+        const dbUser = await db.user.findUnique({ where: { email: token.email } });
+        if (dbUser) token.id = dbUser.id;
       }
       return token;
     },

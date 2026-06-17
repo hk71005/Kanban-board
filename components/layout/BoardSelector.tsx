@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { useState } from 'react';
 import CreateBoardDialog from '@/components/board/CreateBoardDialog';
+import BoardIcon from '@/components/shared/BoardIcon';
 
 type Board = {
   id: string;
@@ -54,10 +55,15 @@ export default function BoardSelector({ boards }: BoardSelectorProps) {
             aria-label="Select a board"
             className="w-[220px] justify-between"
           >
-            <span className="truncate">
-              {currentBoard
-                ? `${currentBoard.emoji || '📋'} ${currentBoard.title}`
-                : 'Select a board...'}
+            <span className="flex items-center gap-2 truncate min-w-0">
+              {currentBoard ? (
+                <>
+                  <BoardIcon emoji={currentBoard.emoji} size="sm" className="shrink-0" />
+                  <span className="truncate">{currentBoard.title}</span>
+                </>
+              ) : (
+                'Select a board...'
+              )}
             </span>
             <ChevronsUpDown className="w-4 h-4 ml-2 opacity-50 shrink-0" />
           </Button>
@@ -74,7 +80,7 @@ export default function BoardSelector({ boards }: BoardSelectorProps) {
                     onSelect={() => onBoardSelect(board.id)}
                     className="text-sm"
                   >
-                    <span className="mr-2">{board.emoji || '📋'}</span>
+                    <BoardIcon emoji={board.emoji} size="sm" className="mr-2 shrink-0" />
                     <span className="truncate">{board.title}</span>
                   </CommandItem>
                 ))}

@@ -8,7 +8,6 @@ import { MessageSquare, CheckSquare } from 'lucide-react';
 import { TaskWithDetails } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import PriorityBadge from '../shared/PriorityBadge';
 import DueDateBadge from '../shared/DueDateBadge';
 import UserAvatar from '../shared/UserAvatar';
@@ -48,6 +47,20 @@ export default function TaskCard({ task }: TaskCardProps) {
     ? board?.members.find((m) => m.user.id === task.assignee)
     : null;
 
+  // Left accent bar: overdue/today states override priority color.
+  // 4px for date-driven urgency, 3px for priority-only accents.
+  const accentStyle = (): React.CSSProperties => {
+    if (isOverdue) return { borderLeftWidth: '4px', borderLeftStyle: 'solid', borderLeftColor: 'hsl(var(--destructive))' };
+    if (isDueToday) return { borderLeftWidth: '4px', borderLeftStyle: 'solid', borderLeftColor: '#f59e0b' };
+    const colors: Record<string, string> = {
+      URGENT: '#ef4444',
+      HIGH:   '#f97316',
+      MEDIUM: '#f59e0b',
+      LOW:    '#60a5fa',
+    };
+    return { borderLeftWidth: '3px', borderLeftStyle: 'solid', borderLeftColor: colors[task.priority] ?? '#60a5fa' };
+  };
+
   if (isDragging) {
     return (
       <div
@@ -76,16 +89,18 @@ export default function TaskCard({ task }: TaskCardProps) {
       aria-label={`Open task: ${task.title}`}
     >
       <Card
-        className={cn(
-          'cursor-grab active:cursor-grabbing hover:shadow-md hover:shadow-primary/20 transition-shadow duration-200',
-          isOverdue && 'border-l-4 border-l-destructive',
-          isDueToday && !isOverdue && 'border-l-4 border-l-warning'
-        )}
+        className="cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5"
+        style={accentStyle()}
       >
-        <CardHeader className="p-3 pb-1">
-          <p className="font-semibold leading-tight">{task.title}</p>
+        <CardHeader className="p-3 pb-1.5">
+          <p className="text-sm font-semibold leading-snug">{task.title}</p>
+          {task.description && (
+            <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">
+              {task.description}
+            </p>
+          )}
           {task.labels.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
+            <div className="flex flex-wrap gap-1 mt-1.5">
               {task.labels.map((label) => (
                 <Badge
                   key={label.id}
@@ -98,9 +113,9 @@ export default function TaskCard({ task }: TaskCardProps) {
             </div>
           )}
         </CardHeader>
-        <CardContent className="p-3 pt-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-wrap">
+        <CardContent className="px-3 pb-2.5 pt-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
               <PriorityBadge priority={task.priority} />
               {task.dueDate && <DueDateBadge dueDate={task.dueDate} />}
             </div>
@@ -108,27 +123,29 @@ export default function TaskCard({ task }: TaskCardProps) {
               <UserAvatar name={assigneeMember.user.name} size="sm" />
             )}
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-3">
-              {task.subtasks.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <CheckSquare className="w-3 h-3" />
-                  {completedSubtasks}/{task.subtasks.length}
-                </span>
-              )}
-              {task.comments.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3 h-3" />
-                  {task.comments.length}
-                </span>
+          {(task.subtasks.length > 0 || task.comments.length > 0 || task.storyPoints) && (
+            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2.5">
+                {task.subtasks.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <CheckSquare className="w-3 h-3" />
+                    {completedSubtasks}/{task.subtasks.length}
+                  </span>
+                )}
+                {task.comments.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="w-3 h-3" />
+                    {task.comments.length}
+                  </span>
+                )}
+              </div>
+              {task.storyPoints && (
+                <div className="flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-primary/15 text-primary">
+                  {task.storyPoints}
+                </div>
               )}
             </div>
-            {task.storyPoints && (
-              <div className="flex items-center justify-center w-6 h-6 text-xs font-bold rounded-full bg-surface text-foreground">
-                {task.storyPoints}
-              </div>
-            )}
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

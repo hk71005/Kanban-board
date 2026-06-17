@@ -23,12 +23,17 @@ async function checkTaskPermissions(taskId: string) {
   }
 
   const board = task.column.board;
-  const isOwnerOrMember =
-    board.userId === session.user.id ||
-    board.members.some((m) => m.userId === session.user.id);
 
-  if (!isOwnerOrMember) {
+  if (board.userId === session.user.id) {
+    return { session, task, board };
+  }
+
+  const member = board.members.find((m) => m.userId === session.user.id);
+  if (!member) {
     throw new Error('Unauthorized');
+  }
+  if (member.role === 'VIEWER') {
+    throw new Error('Viewers cannot modify tasks');
   }
 
   return { session, task, board };
@@ -110,6 +115,15 @@ export async function updateTask(
 
   const { labels, subtasks, ...taskData } = validatedFields.data;
 
+  if (taskData.assignee) {
+    const isValidAssignee =
+      taskData.assignee === board.userId ||
+      board.members.some((m) => m.userId === taskData.assignee);
+    if (!isValidAssignee) {
+      return { error: 'Assignee must be a board member' };
+    }
+  }
+
   try {
     await db.$transaction(async (tx) => {
       await tx.task.update({
@@ -181,13 +195,14 @@ export async function updateTaskOrder(
 
   const board = await db.board.findUnique({
     where: { id: boardId },
-    include: { members: { select: { userId: true } } },
+    include: { members: { select: { userId: true, role: true } } },
   });
   if (!board) return { error: 'Board not found' };
-  const isAuthorized =
-    board.userId === session.user.id ||
-    board.members.some((m) => m.userId === session.user.id);
-  if (!isAuthorized) return { error: 'Unauthorized' };
+
+  const isOwner = board.userId === session.user.id;
+  const member = board.members.find((m) => m.userId === session.user.id);
+  if (!isOwner && !member) return { error: 'Unauthorized' };
+  if (!isOwner && member?.role === 'VIEWER') return { error: 'Viewers cannot reorder tasks' };
 
   try {
     await db.$transaction(
@@ -198,7 +213,6 @@ export async function updateTaskOrder(
         })
       )
     );
-    revalidatePath(`/boards/${boardId}`);
     return { success: 'Task order updated' };
   } catch (error) {
     return { error: 'Failed to update task order' };

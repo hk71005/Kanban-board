@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import UserAvatar from '@/components/shared/UserAvatar';
 import { ThemeToggle } from './ThemeToggle';
 import BoardSelector from './BoardSelector';
+import KeyboardShortcutsDialog from '@/components/shared/KeyboardShortcutsDialog';
 
 interface NavbarProps {
   user: User;
@@ -32,24 +33,19 @@ export default function Navbar({ user, boards }: NavbarProps) {
       <div className="container flex items-center h-16">
         <div className="flex items-center gap-3">
           <Link href="/boards" className="text-lg font-bold flex items-center gap-2">
-            {/* Inline SVG logo - purple M mark */}
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M3 20V4l9 8 9-8v16"
-                stroke="#7c3aed"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            {/* Kanban columns logo mark */}
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="2" y="3" width="5" height="4" rx="1.25" fill="#7c3aed"/>
+              <rect x="2" y="8.5" width="5" height="6.5" rx="1.25" fill="#7c3aed" fillOpacity="0.55"/>
+              <rect x="2" y="16" width="5" height="3" rx="1" fill="#7c3aed" fillOpacity="0.25"/>
+              <rect x="8.5" y="3" width="5" height="6.5" rx="1.25" fill="#7c3aed"/>
+              <rect x="8.5" y="11" width="5" height="4" rx="1.25" fill="#7c3aed" fillOpacity="0.55"/>
+              <rect x="8.5" y="16" width="5" height="3" rx="1" fill="#7c3aed" fillOpacity="0.25"/>
+              <rect x="15" y="3" width="5" height="5" rx="1.25" fill="#7c3aed" fillOpacity="0.55"/>
+              <rect x="15" y="9.5" width="5" height="4" rx="1.25" fill="#7c3aed" fillOpacity="0.25"/>
+              <rect x="15" y="15" width="5" height="3.5" rx="1" fill="#7c3aed" fillOpacity="0.12"/>
             </svg>
-            <span className="font-bold tracking-tight">The Kanban Workspace</span>
+            <span className="font-bold tracking-tight">Kanvi</span>
           </Link>
           {/* Live indicator */}
           <span className="relative flex w-2 h-2">
@@ -62,6 +58,7 @@ export default function Navbar({ user, boards }: NavbarProps) {
           <div className="hidden md:block">
             <BoardSelector boards={boards} />
           </div>
+          <KeyboardShortcutsDialog />
           <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

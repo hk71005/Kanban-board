@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { createTask } from '@/actions/task';
 import { updateBoard, deleteBoard } from '@/actions/board';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import BoardIcon, { BOARD_ICON_OPTIONS } from '@/components/shared/BoardIcon';
 
 interface BoardHeaderProps {
   board: BoardWithDetails;
@@ -70,7 +71,8 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   // Edit board dialog state
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(board.title);
-  const [editEmoji, setEditEmoji] = useState(board.emoji ?? '');
+  const isKnownIcon = BOARD_ICON_OPTIONS.some(({ name }) => name === board.emoji);
+  const [editEmoji, setEditEmoji] = useState(isKnownIcon ? (board.emoji ?? 'Kanban') : 'Kanban');
 
   const [isPending, startTransition] = useTransition();
   const columns = useBoardStore((s) => s.columns);
@@ -156,12 +158,12 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   };
 
   return (
-    <div className="p-4 border-b bg-surface">
+    <div className="px-5 py-4 border-b bg-surface">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         {/* Board identity */}
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-3xl shrink-0">{board.emoji || '📋'}</span>
-          <h1 className="text-2xl font-bold truncate">{board.title}</h1>
+          <BoardIcon emoji={board.emoji} size="lg" />
+          <h1 className="text-xl font-semibold truncate">{board.title}</h1>
           <MemberManagementDialog board={board} currentUserId={currentUserId} />
         </div>
 
@@ -364,14 +366,24 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
             <DialogTitle>Edit board</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Emoji</p>
-              <Input
-                value={editEmoji}
-                onChange={(e) => setEditEmoji(e.target.value)}
-                placeholder="📋"
-                maxLength={2}
-              />
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Icon</p>
+              <div className="flex flex-wrap gap-2">
+                {BOARD_ICON_OPTIONS.map(({ name, icon: Icon }) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => setEditEmoji(name)}
+                    className={`flex items-center justify-center w-10 h-10 rounded-lg border-2 transition-all ${
+                      editEmoji === name
+                        ? 'border-primary bg-primary/10'
+                        : 'border-transparent hover:border-muted bg-muted/30 hover:bg-muted/50'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${editEmoji === name ? 'text-primary' : 'text-muted-foreground'}`} />
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium">Title</p>
@@ -395,12 +407,9 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
       </Dialog>
 
       {/* Filter bar + progress — stacked on mobile */}
-      <div className="flex flex-col gap-3 mt-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-border/40 md:flex-row md:items-center md:justify-between">
         <FilterBar members={board.members} />
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">Progress</span>
-          <ProgressBar />
-        </div>
+        <ProgressBar />
       </div>
     </div>
   );

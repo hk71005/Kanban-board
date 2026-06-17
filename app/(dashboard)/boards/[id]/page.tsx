@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import db from '@/lib/db';
 import Board from '@/components/board/Board';
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: BoardPageProps) {
   });
 
   return {
-    title: `${board?.title || 'Board'} | Kanban Board`,
+    title: `${board?.title || 'Board'} | Kanvi`,
   };
 }
 
@@ -27,7 +27,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return notFound();
+    redirect('/login');
   }
 
   const board = await db.board.findUnique({

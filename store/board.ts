@@ -143,6 +143,12 @@ export const useBoardStore = create<BoardState>((set) => ({
       activeTask: state.activeTask?.id === taskId
         ? { ...state.activeTask, comments: [comment, ...state.activeTask.comments] }
         : state.activeTask,
+      columns: state.columns.map((col) => ({
+        ...col,
+        tasks: col.tasks.map((t) =>
+          t.id === taskId ? { ...t, comments: [comment, ...t.comments] } : t
+        ),
+      })),
     })),
   removeCommentFromStore: (taskId, commentId) =>
     set((state) => ({
@@ -152,5 +158,13 @@ export const useBoardStore = create<BoardState>((set) => ({
             comments: state.activeTask.comments.filter((c) => c.id !== commentId),
           }
         : state.activeTask,
+      columns: state.columns.map((col) => ({
+        ...col,
+        tasks: col.tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, comments: t.comments.filter((c) => c.id !== commentId) }
+            : t
+        ),
+      })),
     })),
 }));
