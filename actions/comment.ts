@@ -72,11 +72,24 @@ export async function deleteComment(commentId: string) {
 
   const comment = await db.comment.findUnique({
     where: { id: commentId },
-    include: { task: { include: { column: { select: { boardId: true } } } } },
+    include: {
+      task: { include: { column: { include: { board: { include: { members: true } } } } } },
+    },
   });
 
   if (!comment) {
     return { error: 'Comment not found.' };
+  }
+
+  const board = comment.task.column.board;
+  const isOwner = board.userId === session.user.id;
+  const member = board.members.find((m) => m.userId === session.user.id);
+
+  if (!isOwner && !member) {
+    return { error: 'Unauthorized.' };
+  }
+  if (!isOwner && member?.role === 'VIEWER') {
+    return { error: 'Viewers cannot delete comments.' };
   }
 
   if (comment.userId !== session.user.id) {
@@ -88,8 +101,7 @@ export async function deleteComment(commentId: string) {
       where: { id: commentId },
     });
 
-    const boardId = comment.task.column.boardId;
-    revalidatePath(`/boards/${boardId}`);
+    revalidatePath(`/boards/${board.id}`);
     return { success: 'Comment deleted.' };
   } catch (error) {
     return { error: 'Failed to delete comment.' };

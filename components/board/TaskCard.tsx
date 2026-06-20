@@ -123,26 +123,19 @@ export default function TaskCard({ task }: TaskCardProps) {
               <UserAvatar name={assigneeMember.user.name} size="sm" />
             )}
           </div>
-          {(task.subtasks.length > 0 || task.comments.length > 0 || task.storyPoints) && (
-            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2.5">
-                {task.subtasks.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <CheckSquare className="w-3 h-3" />
-                    {completedSubtasks}/{task.subtasks.length}
-                  </span>
-                )}
-                {task.comments.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    {task.comments.length}
-                  </span>
-                )}
-              </div>
-              {task.storyPoints && (
-                <div className="flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-primary/15 text-primary">
-                  {task.storyPoints}
-                </div>
+          {(task.subtasks.length > 0 || task.comments.length > 0) && (
+            <div className="flex items-center gap-2.5 mt-2 text-xs text-muted-foreground">
+              {task.subtasks.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <CheckSquare className="w-3 h-3" />
+                  {completedSubtasks}/{task.subtasks.length}
+                </span>
+              )}
+              {task.comments.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3" />
+                  {task.comments.length}
+                </span>
               )}
             </div>
           )}

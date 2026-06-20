@@ -154,7 +154,7 @@ export default async function PricingPage() {
               <p className="text-muted-foreground text-sm">For teams that need more power.</p>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-bold">$9</span>
+              <span className="text-4xl font-bold">$6</span>
               <span className="text-muted-foreground text-sm ml-2">/ month</span>
               <p className="text-xs text-muted-foreground mt-1">Per workspace. Billed monthly.</p>
             </div>
@@ -186,7 +186,7 @@ export default async function PricingPage() {
               },
               {
                 q: 'What happens after the beta?',
-                a: 'The Free plan stays free. Pro features will be available for $9/month when ready — you will be notified first.',
+                a: 'The Free plan stays free. Pro features will be available for $6/month when ready — you will be notified first.',
               },
               {
                 q: 'How many boards can I create?',
@@ -217,6 +217,7 @@ export default async function PricingPage() {
             <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
           </nav>
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Kanvi

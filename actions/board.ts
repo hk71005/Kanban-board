@@ -1,5 +1,6 @@
 'use server';
 
+import crypto from 'crypto';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
@@ -254,4 +255,41 @@ export async function deleteColumn(columnId: string) {
     } catch (error) {
         return { error: 'Failed to delete column' };
     }
+}
+
+export async function generateShareToken(boardId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated' };
+
+  const board = await db.board.findUnique({ where: { id: boardId }, select: { userId: true } });
+  if (!board || board.userId !== session.user.id) {
+    return { error: 'Only the board owner can share this board' };
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  try {
+    await db.board.update({ where: { id: boardId }, data: { shareToken: token } });
+    revalidatePath(`/boards/${boardId}`);
+    return { success: token };
+  } catch {
+    return { error: 'Failed to generate share link' };
+  }
+}
+
+export async function revokeShareToken(boardId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Not authenticated' };
+
+  const board = await db.board.findUnique({ where: { id: boardId }, select: { userId: true } });
+  if (!board || board.userId !== session.user.id) {
+    return { error: 'Only the board owner can manage sharing' };
+  }
+
+  try {
+    await db.board.update({ where: { id: boardId }, data: { shareToken: null } });
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true as const };
+  } catch {
+    return { error: 'Failed to disable share link' };
+  }
 }

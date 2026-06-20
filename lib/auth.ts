@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === 'google') {
-        if (!profile?.email) return false;
+        if (!profile?.email || !(profile as { email_verified?: boolean }).email_verified) return false;
         await db.user.upsert({
           where: { email: profile.email },
           update: { name: profile.name ?? null },

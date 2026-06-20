@@ -30,6 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import BoardIcon, { BOARD_ICON_OPTIONS } from '@/components/shared/BoardIcon';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CreateBoardDialogProps {
   /** When true, renders as a small icon-only button for use in the navbar */
@@ -93,18 +94,25 @@ export default function CreateBoardDialog({ compact = false }: CreateBoardDialog
         if (!next) resetDialog();
       }}
     >
-      <DialogTrigger asChild>
-        {compact ? (
-          <Button variant="ghost" size="icon" aria-label="Create new board">
-            <PlusCircle className="w-4 h-4" />
-          </Button>
-        ) : (
+      {compact ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Create new board">
+                <PlusCircle className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Create new board</TooltipContent>
+        </Tooltip>
+      ) : (
+        <DialogTrigger asChild>
           <Button>
             <PlusCircle className="w-4 h-4 mr-2" />
             Create Board
           </Button>
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>

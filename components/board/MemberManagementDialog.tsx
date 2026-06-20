@@ -1,13 +1,21 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Users, X } from 'lucide-react';
+import { useEffect, useState, useTransition } from 'react';
+import { RefreshCw, Users, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { BoardRole } from '@prisma/client';
 import { useRouter } from 'next/navigation';
+import { formatDistanceToNow } from 'date-fns';
 
 import { BoardWithDetails } from '@/types';
-import { inviteMember, removeMember, updateMemberRole } from '@/actions/member';
+import {
+  getPendingInvites,
+  inviteMember,
+  removeMember,
+  resendInvite,
+  revokeInvite,
+  updateMemberRole,
+} from '@/actions/member';
 import {
   Dialog,
   DialogContent,
@@ -33,13 +41,42 @@ interface MemberManagementDialogProps {
   currentUserId: string;
 }
 
+type PendingInvite = {
+  id: string;
+  email: string;
+  role: BoardRole;
+  createdAt: Date | string;
+  expiresAt: Date | string;
+};
+
 export default function MemberManagementDialog({ board, currentUserId }: MemberManagementDialogProps) {
   const [open, setOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const router = useRouter();
 
   const isOwner = board.user.id === currentUserId;
+
+  const fetchInvites = async () => {
+    if (!isOwner) return;
+    try {
+      const data = await getPendingInvites(board.id);
+      setPendingInvites(data);
+    } catch {
+      // Silently fail — invites section stays empty
+    }
+  };
+
+  useEffect(() => {
+    if (open && isOwner) {
+      fetchInvites();
+    }
+    if (!open) {
+      setPendingInvites([]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleInvite = () => {
     const email = inviteEmail.trim();
@@ -48,7 +85,11 @@ export default function MemberManagementDialog({ board, currentUserId }: MemberM
     startTransition(() => {
       inviteMember(board.id, { email }).then((data) => {
         if (data.error) toast.error(data.error);
-        else { toast.success(data.success ?? 'Member invited!'); router.refresh(); }
+        else {
+          toast.success(data.success ?? 'Invite sent!');
+          router.refresh();
+          fetchInvites();
+        }
       });
     });
   };
@@ -67,6 +108,24 @@ export default function MemberManagementDialog({ board, currentUserId }: MemberM
       updateMemberRole(board.id, userId, role).then((data) => {
         if (data.error) toast.error(data.error);
         else { toast.success(data.success ?? 'Role updated'); router.refresh(); }
+      });
+    });
+  };
+
+  const handleRevoke = (inviteId: string) => {
+    startTransition(() => {
+      revokeInvite(inviteId, board.id).then((data) => {
+        if (data.error) toast.error(data.error);
+        else { toast.success(data.success ?? 'Invite revoked'); fetchInvites(); }
+      });
+    });
+  };
+
+  const handleResend = (inviteId: string) => {
+    startTransition(() => {
+      resendInvite(inviteId, board.id).then((data) => {
+        if (data.error) toast.error(data.error);
+        else { toast.success(data.success ?? 'Invite resent'); fetchInvites(); }
       });
     });
   };
@@ -161,6 +220,63 @@ export default function MemberManagementDialog({ board, currentUserId }: MemberM
             </p>
           )}
 
+          {/* Pending invites — owner only */}
+          {isOwner && pendingInvites.length > 0 && (
+            <div className="pt-3 border-t border-border">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Pending Invites
+              </p>
+              <div className="space-y-1">
+                {pendingInvites.map((invite) => {
+                  const expiresAt = new Date(invite.expiresAt);
+                  const expired = expiresAt < new Date();
+                  const expiryText = formatDistanceToNow(expiresAt, { addSuffix: true });
+
+                  return (
+                    <div
+                      key={invite.id}
+                      className="flex items-center justify-between gap-2 py-2 rounded-lg"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm truncate">{invite.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {invite.role === 'VIEWER' ? 'Viewer' : 'Editor'}
+                          {' · '}
+                          <span className={expired ? 'text-destructive' : ''}>
+                            {expired ? `Expired ${expiryText}` : `Expires ${expiryText}`}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                          disabled={isPending}
+                          onClick={() => handleResend(invite.id)}
+                          aria-label={`Resend invite to ${invite.email}`}
+                        >
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Resend
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          disabled={isPending}
+                          onClick={() => handleRevoke(invite.id)}
+                          aria-label={`Revoke invite for ${invite.email}`}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Invite section — owner only */}
           {isOwner && (
             <div className="pt-3 border-t border-border space-y-2">
@@ -181,9 +297,6 @@ export default function MemberManagementDialog({ board, currentUserId }: MemberM
                   Invite
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                The user must already have an account.
-              </p>
             </div>
           )}
         </div>

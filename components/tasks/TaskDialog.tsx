@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useBoardStore } from '@/store/board';
+import type { CommentWithUser } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,8 @@ import ActivityFeed from './ActivityFeed';
 
 export default function TaskDialog() {
   const { activeTask, setActiveTask } = useBoardStore();
+  const taskRef = useRef(activeTask);
+  taskRef.current = activeTask;
 
   // Close dialog on escape key
   useEffect(() => {
@@ -26,6 +29,22 @@ export default function TaskDialog() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [setActiveTask]);
+
+  // Lazy-load comments when a task is opened
+  useEffect(() => {
+    if (!activeTask) return;
+    let cancelled = false;
+    fetch(`/api/tasks/${activeTask.id}/comments`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((comments: CommentWithUser[]) => {
+        if (cancelled) return;
+        // taskRef.current is the latest activeTask at resolve time; skip if dialog closed
+        if (!taskRef.current || taskRef.current.id !== activeTask.id) return;
+        setActiveTask({ ...taskRef.current, comments });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [activeTask?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {

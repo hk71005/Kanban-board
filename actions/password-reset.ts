@@ -49,13 +49,13 @@ export async function requestPasswordReset(email: string) {
   });
 
   // Build reset URL
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
+  const baseUrl = process.env.NEXTAUTH_URL ?? 'https://kanvi.app';
   const resetUrl = `${baseUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(normalizedEmail)}`;
 
   // Send email via Resend
   try {
     await resend.emails.send({
-      from: 'Kanvi <onboarding@resend.dev>',
+      from: 'Kanvi <hello@kanvi.app>',
       to: normalizedEmail,
       subject: 'Reset your password',
       html: `

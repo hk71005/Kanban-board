@@ -3,17 +3,23 @@ import { redirect } from 'next/navigation';
 import {
   ArrowRight,
   BarChart3,
+  Check,
   CheckSquare,
   Clock,
   Columns3,
   MessageSquare,
+  Minus,
   Shield,
   Users,
+  X,
   Zap,
 } from 'lucide-react';
 
 import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
+import EmailCapture from '@/components/landing/EmailCapture';
+import { testimonials } from '@/lib/testimonials';
+import type { Testimonial } from '@/lib/testimonials';
 
 const KanbanLogo = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -90,6 +96,7 @@ const MockColumn = ({
     <div className="flex flex-col gap-2">{children}</div>
   </div>
 );
+
 
 export default async function HomePage() {
   let session = null;
@@ -351,9 +358,8 @@ export default async function HomePage() {
                 Built for people who want to focus, not configure
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-                Most project tools make you spend the first week setting them up. The
-                Kanban Workspace gets out of the way so you can spend that time actually
-                shipping.
+                Most project tools make you spend the first week setting them up. Kanvi
+                gets out of the way so you can spend that time actually shipping.
               </p>
               <ul className="space-y-4">
                 {whyPoints.map((point, i) => (
@@ -438,6 +444,232 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Founder Story ────────────────────────────────────────────────── */}
+      <section className="py-16 px-4 bg-surface/40">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary font-bold text-lg mb-5">
+            H
+          </div>
+          <blockquote className="text-lg text-foreground leading-relaxed mb-5">
+            "I built Kanvi because I was managing multiple projects and kept hitting paywalls
+            and bloated workflows. I wanted something simple enough for a solo founder,
+            powerful enough for a small team — so I built it."
+          </blockquote>
+          <p className="text-sm text-muted-foreground font-medium">
+            Hari · Founder
+          </p>
+        </div>
+      </section>
+
+      {/* ── Early Access + Community ─────────────────────────────────────── */}
+      <section className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
+
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-5 text-xs font-medium rounded-full border border-primary/30 bg-primary/5 text-primary">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Open beta
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight mb-4">
+              Built with early users, not just for them
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              Kanvi is shaped by freelancers, solo founders, and small teams who wanted
+              something that actually stays out of the way.
+            </p>
+          </div>
+
+          {/* Trust blocks */}
+          <div className="grid md:grid-cols-3 gap-5 mb-12">
+            {[
+              {
+                icon: <Users className="w-5 h-5 text-primary" />,
+                title: 'Made for your kind of work',
+                desc: 'Freelancers juggling clients. Solo founders with ten priorities. Small teams tired of tools that assume you have a full ops department.',
+              },
+              {
+                icon: <MessageSquare className="w-5 h-5 text-primary" />,
+                title: 'Your feedback ships features',
+                desc: 'Every feature in Kanvi came from a real frustration someone shared. Early users who speak up directly shape what gets built next.',
+              },
+              {
+                icon: <Zap className="w-5 h-5 text-primary" />,
+                title: 'A direct line to the founder',
+                desc: "You'll hear from Hari — the person who built Kanvi — not a support queue. Replies to your welcome email go straight to him.",
+              },
+            ].map((card) => (
+              <div key={card.title} className="rounded-xl border border-border bg-card p-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  {card.icon}
+                </div>
+                <h3 className="font-semibold mb-2">{card.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{card.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Testimonials — only rendered when the array is populated */}
+          {testimonials.length > 0 && (
+            <div className="mb-12">
+              <h3 className="text-xl font-semibold text-center mb-8">What people are saying</h3>
+              <div className={`grid gap-5 ${
+                testimonials.length === 1
+                  ? 'max-w-sm mx-auto'
+                  : testimonials.length === 2
+                  ? 'sm:grid-cols-2 max-w-2xl mx-auto'
+                  : 'md:grid-cols-3'
+              }`}>
+                {testimonials.map((t: Testimonial) => (
+                  <div
+                    key={`${t.name}-${t.role}`}
+                    className="rounded-xl border border-border bg-card p-6 flex flex-col gap-4"
+                  >
+                    <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {t.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={t.avatar}
+                          alt={t.name}
+                          className="w-9 h-9 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                          {t.initial ?? t.name.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-sm font-semibold leading-none">{t.name}</p>
+                          {t.verified && (
+                            <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full leading-none">
+                              verified
+                            </span>
+                          )}
+                          {t.betaTester && (
+                            <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none">
+                              Beta Tester
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {t.role}
+                          {t.company ? ` · ${t.company}` : ''}
+                          {t.source ? ` via ${t.source}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Founder CTA */}
+          <div className="rounded-2xl border border-border bg-card/50 px-8 py-10 text-center max-w-2xl mx-auto">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              Early access
+            </p>
+            <h3 className="text-xl font-semibold mb-3">Try it — tell me what you think</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-md mx-auto">
+              Kanvi is free to use right now. If you sign up and hit something frustrating
+              — or something you love — reply to your welcome email. I read every one.
+            </p>
+            <Button asChild size="sm">
+              <Link href="/register">
+                Get early access
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+              </Link>
+            </Button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Comparison table ─────────────────────────────────────────────── */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold tracking-tight mb-4">
+              How Kanvi compares
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              A straight comparison. No spin.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-[520px] text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left px-5 py-4 font-medium text-muted-foreground w-[36%]" />
+                  <th className="px-4 py-4 text-center font-semibold text-primary bg-primary/5">Kanvi</th>
+                  <th className="px-4 py-4 text-center font-medium text-muted-foreground">Trello</th>
+                  <th className="px-4 py-4 text-center font-medium text-muted-foreground">Notion</th>
+                  <th className="px-4 py-4 text-center font-medium text-muted-foreground">ClickUp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    feature: 'Unlimited boards',
+                    kanvi: { type: 'yes' },
+                    trello: { type: 'no', note: '10 boards on free' },
+                    notion: { type: 'partial', note: 'Pages, not boards' },
+                    clickup: { type: 'yes' },
+                  },
+                  {
+                    feature: 'Built for Kanban',
+                    kanvi: { type: 'yes' },
+                    trello: { type: 'yes' },
+                    notion: { type: 'no', note: 'General workspace' },
+                    clickup: { type: 'partial', note: 'One of many views' },
+                  },
+                  {
+                    feature: 'All core features free',
+                    kanvi: { type: 'yes' },
+                    trello: { type: 'partial', note: 'Power-Ups cost extra' },
+                    notion: { type: 'partial', note: 'Guest limit on free' },
+                    clickup: { type: 'partial', note: 'Some features gated' },
+                  },
+                  {
+                    feature: 'Start in under 1 minute',
+                    kanvi: { type: 'yes' },
+                    trello: { type: 'partial' },
+                    notion: { type: 'no', note: 'Complex setup' },
+                    clickup: { type: 'no', note: 'Steep learning curve' },
+                  },
+                ].map((row, i) => (
+                  <tr key={row.feature} className={`border-t border-border/60${i % 2 !== 0 ? ' bg-muted/20' : ''}`}>
+                    <td className="px-5 py-4 font-medium">{row.feature}</td>
+                    {([row.kanvi, row.trello, row.notion, row.clickup] as { type: string; note?: string }[]).map((cell, j) => (
+                      <td key={j} className={`px-4 py-4 text-center${j === 0 ? ' bg-primary/5' : ''}`}>
+                        <div className="flex flex-col items-center gap-1">
+                          {cell.type === 'yes' && <Check className="w-4 h-4 text-emerald-500 mx-auto" />}
+                          {cell.type === 'no' && <X className="w-4 h-4 text-muted-foreground/40 mx-auto" />}
+                          {cell.type === 'partial' && <Minus className="w-4 h-4 text-amber-400 mx-auto" />}
+                          {cell.note && (
+                            <span className="text-[10px] text-muted-foreground leading-tight max-w-[80px]">
+                              {cell.note}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            Based on each tool's free plan as of 2026. ✓ = fully included · — = partial · ✗ = not available
+          </p>
+        </div>
+      </section>
+
       {/* ── Final CTA ────────────────────────────────────────────────────── */}
       <section
         className="py-24 px-4 text-center"
@@ -470,6 +702,13 @@ export default async function HomePage() {
               <Link href="/login">Sign in</Link>
             </Button>
           </div>
+
+          <div className="mt-10 pt-8 border-t border-border/40">
+            <p className="text-sm text-muted-foreground mb-3">
+              Not ready yet? Leave your email — we'll let you know when we ship new features.
+            </p>
+            <EmailCapture />
+          </div>
         </div>
       </section>
 
@@ -487,11 +726,11 @@ export default async function HomePage() {
             <Link href="/privacy" className="hover:text-foreground transition-colors">
               Privacy
             </Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">
+              Terms
+            </Link>
             <Link href="/login" className="hover:text-foreground transition-colors">
               Sign in
-            </Link>
-            <Link href="/register" className="hover:text-foreground transition-colors">
-              Get started
             </Link>
           </nav>
           <p className="text-xs text-muted-foreground">

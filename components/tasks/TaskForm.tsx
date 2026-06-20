@@ -221,7 +221,7 @@ export default function TaskForm({ task }: TaskFormProps) {
               <FormControl>
                 <Input
                   {...field}
-                  className="h-auto min-h-0 border-none bg-transparent p-0 text-2xl font-bold leading-tight focus-visible:ring-0 focus-visible:border-transparent"
+                  className="h-auto min-h-0 border-none bg-transparent p-0 text-2xl font-bold leading-tight focus-visible:ring-0 focus-visible:border-transparent rounded-md hover:bg-muted/30 transition-colors cursor-text"
                 />
               </FormControl>
               <FormMessage />
@@ -302,61 +302,39 @@ export default function TaskForm({ task }: TaskFormProps) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {members.length > 0 && (
           <FormField
             control={form.control}
-            name="storyPoints"
+            name="assignee"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel>Story Points</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    placeholder="e.g., 5"
-                    onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-                    value={field.value ?? ''}
-                  />
-                </FormControl>
+                <FormLabel>Assignee</FormLabel>
+                <Select
+                  onValueChange={(val) => {
+                    field.onChange(val === '__none__' ? null : val);
+                    queueSave();
+                  }}
+                  value={field.value ?? '__none__'}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Unassigned" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="__none__">Unassigned</SelectItem>
+                    {members.map((m) => (
+                      <SelectItem key={m.user.id} value={m.user.id}>
+                        {m.user.name || m.user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {members.length > 0 && (
-            <FormField
-              control={form.control}
-              name="assignee"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel>Assignee</FormLabel>
-                  <Select
-                    onValueChange={(val) => {
-                      field.onChange(val === '__none__' ? null : val);
-                      queueSave();
-                    }}
-                    value={field.value ?? '__none__'}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Unassigned" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="__none__">Unassigned</SelectItem>
-                      {members.map((m) => (
-                        <SelectItem key={m.user.id} value={m.user.id}>
-                          {m.user.name || m.user.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-        </div>
+        )}
 
         <FormField
           control={form.control}

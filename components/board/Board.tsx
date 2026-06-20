@@ -7,6 +7,7 @@ import {
   DragOverEvent,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   KeyboardSensor,
@@ -22,6 +23,7 @@ import { updateColumnOrder } from '@/actions/board';
 import { toast } from 'sonner';
 import DragOverlay from './DragOverlay';
 import BoardHeader from './BoardHeader';
+import AddColumnDialog from './AddColumnDialog';
 import dynamic from 'next/dynamic';
 const TaskDialog = dynamic(() => import('@/components/tasks/TaskDialog'), { ssr: false });
 
@@ -43,15 +45,35 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
     setCurrentUserId(currentUserId);
   }, [initialBoardData, currentUserId, setBoard, setCurrentUserId]);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable) return;
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        const firstColumnId = columns[0]?.id;
+        if (firstColumnId) {
+          window.dispatchEvent(new CustomEvent('kanvi:quick-add', { detail: { columnId: firstColumnId } }));
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [columns]);
+
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
   const filteredColumns = useMemo(() => {
     if (!searchQuery && priorityFilters.length === 0 && !assigneeFilter) return columns;
+    const q = searchQuery.toLowerCase();
     return columns.map((col) => ({
       ...col,
       tasks: col.tasks.filter((task) => {
         const matchesSearch =
-          !searchQuery || task.title.toLowerCase().includes(searchQuery.toLowerCase());
+          !searchQuery ||
+          task.title.toLowerCase().includes(q) ||
+          (task.description?.toLowerCase().includes(q) ?? false) ||
+          task.labels.some((l) => l.name.toLowerCase().includes(q));
         const matchesPriority =
           priorityFilters.length === 0 || priorityFilters.includes(task.priority);
         const matchesAssignee =
@@ -64,7 +86,13 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 10, // 10px
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor)
@@ -310,24 +338,34 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
       <TaskDialog />
       <BoardHeader board={board} currentUserId={currentUserId} />
       <div className="flex-1 overflow-x-auto snap-x snap-mandatory scroll-smooth px-4 py-4">
-        <DndContext
-          sensors={sensors}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-          onDragOver={onDragOver}
-        >
-          <div className="flex h-full gap-4 min-w-full">
-            <SortableContext items={columnsId}>
-              {filteredColumns.map((col) => (
-                <Column key={col.id} column={col} />
-              ))}
-            </SortableContext>
+        {columns.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[320px] text-center">
+            <h2 className="text-lg font-semibold mb-1">This board has no columns yet.</h2>
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+              Columns are where your tasks live.
+            </p>
+            <AddColumnDialog boardId={board.id} />
           </div>
-          {createPortal(
-            <DragOverlay activeColumn={activeColumn} activeTask={activeTask} />,
-            document.body
-          )}
-        </DndContext>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragOver={onDragOver}
+          >
+            <div className="flex h-full gap-4 min-w-full">
+              <SortableContext items={columnsId}>
+                {filteredColumns.map((col) => (
+                  <Column key={col.id} column={col} />
+                ))}
+              </SortableContext>
+            </div>
+            {createPortal(
+              <DragOverlay activeColumn={activeColumn} activeTask={activeTask} />,
+              document.body
+            )}
+          </DndContext>
+        )}
       </div>
     </div>
   );

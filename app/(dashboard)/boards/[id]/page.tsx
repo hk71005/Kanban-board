@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import db from '@/lib/db';
 import Board from '@/components/board/Board';
+import type { BoardWithDetails } from '@/types';
 
 interface BoardPageProps {
   params: Promise<{
@@ -69,20 +70,6 @@ export default async function BoardPage({ params }: BoardPageProps) {
               column: true,
               labels: true,
               subtasks: true,
-              comments: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      name: true,
-                      email: true,
-                    },
-                  },
-                },
-                orderBy: {
-                  createdAt: 'desc',
-                },
-              },
             },
           },
         },
@@ -94,5 +81,13 @@ export default async function BoardPage({ params }: BoardPageProps) {
     notFound();
   }
 
-  return <Board initialBoardData={board} currentUserId={session.user.id} />;
+  const boardWithDetails: BoardWithDetails = {
+    ...board,
+    columns: board.columns.map((col) => ({
+      ...col,
+      tasks: col.tasks.map((task) => ({ ...task, comments: [] })),
+    })),
+  };
+
+  return <Board initialBoardData={boardWithDetails} currentUserId={session.user.id} />;
 }

@@ -2,7 +2,7 @@
 
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { MoreHorizontal, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,7 +31,10 @@ export default function Column({ column }: ColumnProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(column.title);
   const [isPending, startTransition] = useTransition();
-  const { deleteColumnFromStore, renameColumnInStore, addTaskToColumn, deleteTaskFromColumn } = useBoardStore();
+  const {
+    deleteColumnFromStore, renameColumnInStore, addTaskToColumn, deleteTaskFromColumn,
+    searchQuery, setSearchQuery, priorityFilters, setPriorityFilters, assigneeFilter, setAssigneeFilter,
+  } = useBoardStore();
 
   const handleRename = () => {
     const trimmed = renameValue.trim();
@@ -56,6 +59,15 @@ export default function Column({ column }: ColumnProps) {
       });
     });
   };
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { columnId } = (e as CustomEvent<{ columnId: string }>).detail ?? {};
+      if (columnId === column.id) setIsAddingTask(true);
+    };
+    window.addEventListener('kanvi:quick-add', handler);
+    return () => window.removeEventListener('kanvi:quick-add', handler);
+  }, [column.id]);
 
   const tasksIds = useMemo(() => {
     return column.tasks.map((task) => task.id);
@@ -203,12 +215,34 @@ export default function Column({ column }: ColumnProps) {
           ))}
         </SortableContext>
         {column.tasks.length === 0 && (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-[120px] rounded-lg border-2 border-dashed border-muted/60 hover:border-primary/40 hover:bg-primary/5 transition-colors duration-200 gap-2 text-muted-foreground cursor-pointer group"
-            onClick={() => setIsAddingTask(true)}
-          >
-            <PlusCircle className="w-5 h-5 opacity-40 group-hover:opacity-70 transition-opacity" />
-            <span className="text-xs opacity-50 group-hover:opacity-80 transition-opacity">Drop here or add a task</span>
-          </div>
+          searchQuery ? (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-[120px] rounded-lg border-2 border-dashed border-muted/60 gap-2 p-4 text-center">
+              <span className="text-xs text-muted-foreground">No tasks match &ldquo;{searchQuery}&rdquo;</span>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-xs text-primary hover:underline"
+              >
+                Clear search
+              </button>
+            </div>
+          ) : priorityFilters.length > 0 || !!assigneeFilter ? (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-[120px] rounded-lg border-2 border-dashed border-muted/60 gap-2 p-4 text-center">
+              <span className="text-xs text-muted-foreground">No tasks match your filters.</span>
+              <button
+                onClick={() => { setPriorityFilters([]); setAssigneeFilter(null); }}
+                className="text-xs text-primary hover:underline"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-[120px] rounded-lg border-2 border-dashed border-muted/60 hover:border-primary/40 hover:bg-primary/5 transition-colors duration-200 gap-2 text-muted-foreground cursor-pointer group"
+              onClick={() => setIsAddingTask(true)}
+            >
+              <PlusCircle className="w-5 h-5 opacity-40 group-hover:opacity-70 transition-opacity" />
+              <span className="text-xs opacity-50 group-hover:opacity-80 transition-opacity">Drop here or add a task</span>
+            </div>
+          )
         )}
       </div>
 

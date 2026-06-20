@@ -40,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 lib.zip
+
+# local analysis/report files
+generate_report.py
+kanvi-report.pdf
+*.bak
+next.config.ts.bak

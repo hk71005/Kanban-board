@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, MoreHorizontal, CalendarIcon, Pencil, Trash2 } from 'lucide-react';
+import { Plus, MoreHorizontal, CalendarIcon, Pencil, Trash2, Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Priority } from '@prisma/client';
@@ -49,6 +49,7 @@ import { createTask } from '@/actions/task';
 import { updateBoard, deleteBoard } from '@/actions/board';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import BoardIcon, { BOARD_ICON_OPTIONS } from '@/components/shared/BoardIcon';
+import ShareDialog from './ShareDialog';
 
 interface BoardHeaderProps {
   board: BoardWithDetails;
@@ -67,6 +68,9 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [dueDateOpen, setDueDateOpen] = useState(false);
   const [selectedColumnId, setSelectedColumnId] = useState(board.columns[0]?.id ?? '');
+
+  // Share dialog state
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Edit board dialog state
   const [editOpen, setEditOpen] = useState(false);
@@ -317,8 +321,25 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <a href={`/api/boards/${board.id}/export`} download className="cursor-pointer">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </a>
+              </DropdownMenuItem>
               {isOwner && (
                 <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setShareOpen(true);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share board
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={(e) => {
                       e.preventDefault();
@@ -358,6 +379,14 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Share dialog */}
+      <ShareDialog
+        boardId={board.id}
+        initialToken={board.shareToken ?? null}
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+      />
 
       {/* Edit board dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

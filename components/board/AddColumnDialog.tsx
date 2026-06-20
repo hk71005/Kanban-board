@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PlusCircle } from 'lucide-react';
 
@@ -36,6 +37,7 @@ interface AddColumnDialogProps {
 }
 
 export default function AddColumnDialog({ boardId }: AddColumnDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -57,6 +59,7 @@ export default function AddColumnDialog({ boardId }: AddColumnDialogProps) {
           toast.success(data.success);
           form.reset();
           setOpen(false);
+          router.refresh();
         }
       });
     });

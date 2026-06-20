@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Priority } from '@prisma/client';
+import { Priority, BoardRole } from '@prisma/client';
 
 export const registerSchema = z
   .object({
@@ -55,4 +55,9 @@ export const commentSchema = z.object({
 
 export const memberSchema = z.object({
   email: z.string().email('Please enter a valid email to invite.'),
+});
+
+export const inviteSchema = z.object({
+  email: z.string().email('Please enter a valid email to invite.'),
+  role: z.nativeEnum(BoardRole).default(BoardRole.EDITOR),
 });

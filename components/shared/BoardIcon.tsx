@@ -11,6 +11,7 @@ import {
   Layers,
   Globe,
   Shield,
+  Briefcase,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Layers,
   Globe,
   Shield,
+  Briefcase,
 };
 
 export const BOARD_ICON_OPTIONS: { name: string; icon: LucideIcon }[] = [
@@ -43,6 +45,7 @@ export const BOARD_ICON_OPTIONS: { name: string; icon: LucideIcon }[] = [
   { name: 'Layers', icon: Layers },
   { name: 'Globe', icon: Globe },
   { name: 'Shield', icon: Shield },
+  { name: 'Briefcase', icon: Briefcase },
 ];
 
 interface BoardIconProps {

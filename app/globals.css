@@ -43,40 +43,39 @@
   }
 
   .dark {
-    /* MERGEX DARK PURPLE THEME */
-    --background: 257 33% 6%;
+    --background: 240 6% 8%;
     --foreground: 250 100% 97%;
-    --card: 240 34% 14%;
+    --card: 240 6% 13%;
     --card-foreground: 250 100% 97%;
-    --popover: 255 35% 9%;
+    --popover: 240 6% 16%;
     --popover-foreground: 250 100% 97%;
     --primary: 262 84% 58%;
     --primary-foreground: 250 100% 97%;
-    --secondary: 240 34% 14%;
+    --secondary: 240 6% 13%;
     --secondary-foreground: 250 100% 97%;
-    --muted: 240 34% 14%;
-    --muted-foreground: 257 11% 63%;
+    --muted: 240 6% 13%;
+    --muted-foreground: 240 8% 62%;
     --accent: 262 84% 58%;
     --accent-foreground: 250 100% 97%;
     --destructive: 351 90% 60%;
     --destructive-foreground: 250 100% 97%;
-    --border: 262 84% 58% / 0.18;
-    --input: 240 34% 14%;
+    --border: 240 4% 22% / 0.40;
+    --input: 240 6% 13%;
     --ring: 262 84% 58%;
     --chart-1: 262 84% 58%;
     --chart-2: 220 80% 60%;
     --chart-3: 30 95% 60%;
     --chart-4: 120 70% 50%;
     --chart-5: 0 90% 60%;
-    --sidebar: 240 34% 14%;
+    --sidebar: 240 6% 13%;
     --sidebar-foreground: 250 100% 97%;
     --sidebar-primary: 262 84% 58%;
     --sidebar-primary-foreground: 250 100% 97%;
     --sidebar-accent: 262 84% 58%;
     --sidebar-accent-foreground: 250 100% 97%;
-    --sidebar-border: 262 84% 58% / 0.18;
+    --sidebar-border: 240 4% 22% / 0.40;
     --sidebar-ring: 262 84% 58%;
-    --surface: 240 26% 10%;
+    --surface: 240 6% 10%;
   }
 
   * {

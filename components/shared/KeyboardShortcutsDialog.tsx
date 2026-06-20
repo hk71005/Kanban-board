@@ -10,8 +10,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const shortcuts = [
+  { key: 'N', action: 'Quick-add task to first column' },
   { key: 'Click task', action: 'Open task detail' },
   { key: 'Esc', action: 'Close any open dialog' },
   { key: 'Enter', action: 'Submit / confirm forms' },
@@ -35,16 +37,21 @@ export default function KeyboardShortcutsDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-8 h-8 rounded-full text-muted-foreground hover:text-foreground"
-          aria-label="Keyboard shortcuts"
-        >
-          <Keyboard className="w-4 h-4" />
-        </Button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 rounded-full text-muted-foreground hover:text-foreground"
+              aria-label="Keyboard shortcuts"
+            >
+              <Keyboard className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Keyboard shortcuts</TooltipContent>
+      </Tooltip>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Keyboard Shortcuts</DialogTitle>

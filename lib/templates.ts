@@ -51,6 +51,18 @@ export const BOARD_TEMPLATES: BoardTemplate[] = [
     ],
   },
   {
+    id: 'client',
+    name: 'Client Project',
+    description: 'Manage deliverables and client feedback',
+    icon: 'Briefcase',
+    columns: [
+      { title: 'Briefing', color: '#a78bfa', tasks: ['Gather requirements', 'Define scope'] },
+      { title: 'In Progress', color: '#3b82f6', tasks: [] },
+      { title: 'Waiting on Client', color: '#f59e0b', tasks: [] },
+      { title: 'Delivered', color: '#22c55e', tasks: [] },
+    ],
+  },
+  {
     id: 'blank',
     name: 'Blank Board',
     description: 'Start with a clean slate',
