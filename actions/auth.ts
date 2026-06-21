@@ -93,37 +93,41 @@ export async function register(values: z.infer<typeof registerSchema>) {
     });
 
     boardId = board.id;
-  } catch {
-    // Board creation failure must not block registration
+  } catch (err) {
+    console.error('[register] default board creation failed:', err);
   }
 
-  // Send welcome email — fire and forget, never blocks registration
+  // Send welcome email — awaited so Vercel does not cut the request before delivery
   const baseUrl = process.env.NEXTAUTH_URL ?? 'https://kanvi.app';
   const boardUrl = boardId ? `${baseUrl}/boards/${boardId}` : `${baseUrl}/boards`;
-  resend.emails.send({
-    from: 'Kanvi <hello@kanvi.app>',
-    to: email,
-    subject: `Welcome to Kanvi, ${name}!`,
-    html: `
-      <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#09090b">
-        <p style="font-size:20px;font-weight:700;margin:0 0 8px">Welcome to Kanvi, ${name}!</p>
-        <p style="font-size:14px;color:#71717a;margin:0 0 24px">
-          Your account is ready. We've created your first board to help you hit the ground running.
-        </p>
-        <a href="${boardUrl}"
-           style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">
-          Open your board
-        </a>
-        <p style="font-size:12px;color:#a1a1aa;margin:24px 0 0">
-          Questions? Just reply to this email — I read every one.<br/>
-          — Hari, Founder
-        </p>
-        <p style="font-size:11px;color:#d4d4d8;margin:20px 0 0;border-top:1px solid #f4f4f5;padding-top:16px">
-          You received this because you created a Kanvi account.
-        </p>
-      </div>
-    `,
-  }).catch(() => {});
+  try {
+    await resend.emails.send({
+      from: 'Kanvi <hello@kanvi.app>',
+      to: email,
+      subject: `Welcome to Kanvi, ${name}!`,
+      html: `
+        <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#09090b">
+          <p style="font-size:20px;font-weight:700;margin:0 0 8px">Welcome to Kanvi, ${name}!</p>
+          <p style="font-size:14px;color:#71717a;margin:0 0 24px">
+            Your account is ready. We've created your first board to help you hit the ground running.
+          </p>
+          <a href="${boardUrl}"
+             style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">
+            Open your board
+          </a>
+          <p style="font-size:12px;color:#a1a1aa;margin:24px 0 0">
+            Questions? Just reply to this email — I read every one.<br/>
+            — Hari, Founder
+          </p>
+          <p style="font-size:11px;color:#d4d4d8;margin:20px 0 0;border-top:1px solid #f4f4f5;padding-top:16px">
+            You received this because you created a Kanvi account.
+          </p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error('[register] welcome email failed:', err);
+  }
 
   return { success: 'User created successfully! Please log in.', boardId };
 }
