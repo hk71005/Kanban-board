@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { Plus, MoreHorizontal, CalendarIcon, Pencil, Trash2, Download, Share2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -73,6 +73,32 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   // Share dialog state
   const [shareOpen, setShareOpen] = useState(false);
 
+  // Inline board title editing
+  const [isTitleEditing, setIsTitleEditing] = useState(false);
+  const [titleValue, setTitleValue] = useState(board.title);
+  const [displayTitle, setDisplayTitle] = useState(board.title);
+  const titleCommittedRef = useRef(false);
+  const [, startTitleTransition] = useTransition();
+
+  const handleTitleSave = () => {
+    const trimmed = titleValue.trim();
+    setIsTitleEditing(false);
+    if (!trimmed || trimmed === displayTitle) {
+      setTitleValue(displayTitle);
+      return;
+    }
+    setDisplayTitle(trimmed);
+    startTitleTransition(() => {
+      updateBoard(board.id, { title: trimmed }).then((data) => {
+        if (data.error) {
+          toast.error(data.error);
+          setDisplayTitle(board.title);
+          setTitleValue(board.title);
+        }
+      });
+    });
+  };
+
   // Edit board dialog state
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(board.title);
@@ -128,6 +154,7 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
       assignee: assignee === '__none__' ? null : assignee,
       storyPoints: null,
       needsClient: false,
+      clientReviewedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       labels: [],
@@ -181,7 +208,41 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
         {/* Board identity */}
         <div className="flex items-center gap-3 min-w-0">
           <BoardIcon emoji={board.emoji} size="lg" />
-          <h1 className="text-xl font-semibold truncate">{board.title}</h1>
+          {isTitleEditing ? (
+            <Input
+              autoFocus
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  titleCommittedRef.current = true;
+                  handleTitleSave();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  titleCommittedRef.current = true;
+                  setIsTitleEditing(false);
+                  setTitleValue(displayTitle);
+                }
+              }}
+              onBlur={() => {
+                if (titleCommittedRef.current) { titleCommittedRef.current = false; return; }
+                handleTitleSave();
+              }}
+              className="h-8 text-xl font-semibold bg-transparent px-1 py-0 border-none focus-visible:ring-1 focus-visible:ring-primary rounded max-w-[240px]"
+              maxLength={50}
+            />
+          ) : (
+            <h1
+              className="text-xl font-semibold truncate cursor-pointer group flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+              onClick={() => { setTitleValue(displayTitle); setIsTitleEditing(true); }}
+              title="Click to rename"
+            >
+              {displayTitle}
+              <Pencil className="w-3.5 h-3.5 opacity-0 group-hover:opacity-40 transition-opacity shrink-0" />
+            </h1>
+          )}
           <MemberManagementDialog board={board} currentUserId={currentUserId} />
         </div>
 

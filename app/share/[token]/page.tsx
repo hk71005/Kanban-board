@@ -5,6 +5,7 @@ import db from '@/lib/db';
 import BoardIcon from '@/components/shared/BoardIcon';
 import { ArrowRight, Bell, Clock } from 'lucide-react';
 import { deriveHealth, type ProjectHealth } from '@/lib/projectHealth';
+import ClientReviewButton from '@/components/share/ClientReviewButton';
 
 interface SharePageProps {
   params: Promise<{ token: string }>;
@@ -35,6 +36,7 @@ const getBoard = cache(async (token: string) => {
               priority: true,
               dueDate: true,
               needsClient: true,
+              clientReviewedAt: true,
               labels: { select: { id: true, name: true, color: true } },
               subtasks: { select: { id: true, completed: true } },
             },
@@ -236,10 +238,15 @@ export default async function SharePage({ params }: SharePageProps) {
                   <Bell className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
                   <span className="text-xs font-semibold">Action required</span>
                 </div>
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {clientActionTasks.map((t) => (
-                    <li key={t.id} className="text-xs text-muted-foreground leading-snug truncate">
-                      {t.title}
+                    <li key={t.id} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground leading-snug truncate">{t.title}</span>
+                      <ClientReviewButton
+                        taskId={t.id}
+                        shareToken={token}
+                        initialReviewedAt={t.clientReviewedAt}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -303,10 +310,17 @@ export default async function SharePage({ params }: SharePageProps) {
                     >
                       <p className="text-sm font-semibold leading-snug">{task.title}</p>
                       {task.needsClient && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-                          <Clock className="w-3 h-3" />
-                          Action required
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                            <Clock className="w-3 h-3" />
+                            Action required
+                          </span>
+                          <ClientReviewButton
+                            taskId={task.id}
+                            shareToken={token}
+                            initialReviewedAt={task.clientReviewedAt}
+                          />
+                        </div>
                       )}
 
                       {task.description && (

@@ -348,6 +348,13 @@ export default function TaskForm({ task }: TaskFormProps) {
           </div>
         ) : null}
 
+        {task.needsClient && task.clientReviewedAt && (
+          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 px-1">
+            <Check className="w-3.5 h-3.5 shrink-0" />
+            Client reviewed on {format(new Date(task.clientReviewedAt), 'MMM d, yyyy')}
+          </div>
+        )}
+
         {members.length > 0 && (
           <FormField
             control={form.control}

@@ -2,7 +2,7 @@
 
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { ChevronRight, ChevronDown, MoreHorizontal, Pencil, PlusCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,6 +33,7 @@ export default function Column({ column }: ColumnProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(column.title);
   const [isPending, startTransition] = useTransition();
+  const committedRef = useRef(false);
   const [mounted, setMounted] = useState(false);
   const {
     deleteColumnFromStore, renameColumnInStore, addTaskToColumn, deleteTaskFromColumn,
@@ -105,6 +106,7 @@ export default function Column({ column }: ColumnProps) {
       assignee: null,
       storyPoints: null,
       needsClient: false,
+      clientReviewedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       labels: [],
@@ -211,10 +213,22 @@ export default function Column({ column }: ColumnProps) {
               autoFocus
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
-              onBlur={handleRename}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRename();
-                if (e.key === 'Escape') { setIsRenaming(false); setRenameValue(column.title); }
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  committedRef.current = true;
+                  handleRename();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  committedRef.current = true;
+                  setIsRenaming(false);
+                  setRenameValue(column.title);
+                }
+              }}
+              onBlur={() => {
+                if (committedRef.current) { committedRef.current = false; return; }
+                handleRename();
               }}
               className="h-6 py-0 px-1 text-sm font-semibold"
             />

@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { isToday, isPast, startOfDay } from 'date-fns';
-import { MessageSquare, CheckSquare, Clock } from 'lucide-react';
+import { MessageSquare, CheckSquare, Check, Clock } from 'lucide-react';
 
 import { TaskWithDetails } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -107,11 +107,17 @@ export default function TaskCard({ task }: TaskCardProps) {
         </CardHeader>
         <CardContent className="px-3 pb-2.5 pt-0">
           {task.needsClient && (
-            <div className="mb-1.5">
+            <div className="mb-1.5 flex flex-col gap-1">
               <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                 <Clock className="w-3 h-3" />
                 Waiting on client
               </span>
+              {task.clientReviewedAt && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                  <Check className="w-3 h-3" />
+                  Client reviewed
+                </span>
+              )}
             </div>
           )}
           <div className="flex items-center justify-between gap-2">

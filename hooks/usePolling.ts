@@ -10,15 +10,13 @@ export const usePolling = (interval: number) => {
 
   useEffect(() => {
     intervalId.current = setInterval(() => {
-      if (!activeTask && !isDragging) {
+      if (!activeTask && !isDragging && document.visibilityState === 'visible') {
         router.refresh();
       }
     }, interval);
 
     return () => {
-      if (intervalId.current) {
-        clearInterval(intervalId.current);
-      }
+      if (intervalId.current) clearInterval(intervalId.current);
     };
   }, [router, interval, activeTask, isDragging]);
 };
