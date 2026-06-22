@@ -3,19 +3,14 @@
 import { Progress } from '@/components/ui/progress';
 import { useMemo } from 'react';
 import { useBoardStore } from '@/store/board';
-
-const DONE_PATTERNS = [
-  'done', 'complete', 'completed', 'finished',
-  'shipped', 'closed', 'resolved', 'delivered',
-];
+import { DONE_PATTERNS } from '@/lib/projectHealth';
 
 export default function ProgressBar() {
   const columns = useBoardStore((s) => s.columns);
 
   const { progress, totalTasks, doneTasks } = useMemo(() => {
-    // Match by common "done" names; fall back to the last column.
     const doneColumn =
-      columns.find((col) => DONE_PATTERNS.includes(col.title.toLowerCase().trim())) ??
+      columns.find((col) => DONE_PATTERNS.test(col.title.trim())) ??
       columns[columns.length - 1] ??
       null;
 

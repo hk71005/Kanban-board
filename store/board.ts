@@ -11,6 +11,7 @@ type BoardState = {
   searchQuery: string;
   priorityFilters: Priority[];
   assigneeFilter: string | null;
+  isDragging: boolean;
   setBoard: (board: BoardWithDetails) => void;
   setCurrentUserId: (id: string) => void;
   setColumns: (columns: ColumnWithTasks[] | ((prev: ColumnWithTasks[]) => ColumnWithTasks[])) => void;
@@ -18,6 +19,7 @@ type BoardState = {
   setSearchQuery: (query: string) => void;
   setPriorityFilters: (priorities: Priority[]) => void;
   setAssigneeFilter: (userId: string | null) => void;
+  setIsDragging: (value: boolean) => void;
   updateTaskInColumn: (updatedTask: TaskWithDetails) => void;
   addTaskToColumn: (newTask: TaskWithDetails) => void;
   deleteTaskFromColumn: (taskId: string, columnId: string) => void;
@@ -38,8 +40,10 @@ export const useBoardStore = create<BoardState>((set) => ({
   searchQuery: '',
   priorityFilters: [],
   assigneeFilter: null,
+  isDragging: false,
   setBoard: (board) => set({ board, columns: board.columns }),
   setCurrentUserId: (id) => set({ currentUserId: id }),
+  setIsDragging: (value) => set({ isDragging: value }),
   setColumns: (columns) =>
     set((state) => ({
       columns: typeof columns === 'function' ? columns(state.columns) : columns,

@@ -8,8 +8,8 @@ interface PriorityBadgeProps {
 const priorityConfig: Record<Priority, { label: string; dot: string; text: string }> = {
   LOW:    { label: 'Low',    dot: '#60a5fa', text: 'text-muted-foreground/70' },
   MEDIUM: { label: 'Medium', dot: '#fbbf24', text: 'text-muted-foreground' },
-  HIGH:   { label: 'High',   dot: '#f97316', text: 'text-orange-500' },
-  URGENT: { label: 'Urgent', dot: '#ef4444', text: 'text-red-500' },
+  HIGH:   { label: 'High',   dot: '#f97316', text: 'text-muted-foreground' },
+  URGENT: { label: 'Urgent', dot: '#ef4444', text: 'text-muted-foreground' },
 };
 
 export default function PriorityBadge({ priority }: PriorityBadgeProps) {

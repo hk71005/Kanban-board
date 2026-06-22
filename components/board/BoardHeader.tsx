@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, MoreHorizontal, CalendarIcon, Pencil, Trash2, Download, Share2 } from 'lucide-react';
+import { Plus, MoreHorizontal, CalendarIcon, Pencil, Trash2, Download, Share2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Priority } from '@prisma/client';
@@ -47,6 +47,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { createTask } from '@/actions/task';
 import { updateBoard, deleteBoard } from '@/actions/board';
+import { deriveHealth, type ProjectHealth } from '@/lib/projectHealth';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import BoardIcon, { BOARD_ICON_OPTIONS } from '@/components/shared/BoardIcon';
 import ShareDialog from './ShareDialog';
@@ -83,6 +84,16 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   const members = useBoardStore((s) => s.board?.members ?? []);
   const { addTaskToColumn, deleteTaskFromColumn } = useBoardStore();
 
+  const health = deriveHealth(columns);
+  const needsClientCount = columns.flatMap((c) => c.tasks).filter((t) => t.needsClient).length;
+
+  const HEALTH_CONFIG: Record<ProjectHealth, { label: string; cls: string; dot: string }> = {
+    on_track: { label: 'On track', cls: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10', dot: 'bg-emerald-500' },
+    awaiting_feedback: { label: 'Awaiting client', cls: 'text-amber-700 dark:text-amber-400 bg-amber-500/10', dot: 'bg-amber-400' },
+    delayed: { label: 'Delayed', cls: 'text-destructive bg-destructive/10', dot: 'bg-destructive' },
+    completed: { label: 'Completed', cls: 'text-primary bg-primary/10', dot: 'bg-primary' },
+  };
+
   const isOwner = board.user.id === currentUserId;
 
   const resetForm = () => {
@@ -116,6 +127,7 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
       dueDate: dueDate ?? null,
       assignee: assignee === '__none__' ? null : assignee,
       storyPoints: null,
+      needsClient: false,
       createdAt: new Date(),
       updatedAt: new Date(),
       labels: [],
@@ -131,6 +143,7 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
         priority,
         assignee: assignee === '__none__' ? null : assignee,
         dueDate: dueDate ?? null,
+        needsClient: false,
       }).then((data) => {
         if (data.error) {
           toast.error(data.error);
@@ -162,7 +175,8 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   };
 
   return (
-    <div className="px-5 py-4 border-b bg-surface">
+    <>
+    <div className="px-5 py-4 border-b bg-surface/95 sticky top-0 z-10 backdrop-blur-sm">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         {/* Board identity */}
         <div className="flex items-center gap-3 min-w-0">
@@ -174,6 +188,13 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
         {/* Actions row */}
         <div className="flex items-center gap-2 flex-wrap">
           <SearchBar />
+
+          {isOwner && (
+            <Button variant="outline" size="sm" onClick={() => setShareOpen(true)} aria-label="Share board">
+              <Share2 className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Share</span>
+            </Button>
+          )}
 
           {/* New Task dialog */}
           <Dialog open={open} onOpenChange={setOpen}>
@@ -333,16 +354,6 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
                   <DropdownMenuItem
                     onSelect={(e) => {
                       e.preventDefault();
-                      setShareOpen(true);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share board
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
                       setEditTitle(board.title);
                       setEditEmoji(board.emoji ?? '');
                       setEditOpen(true);
@@ -437,9 +448,32 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
 
       {/* Filter bar + progress — stacked on mobile */}
       <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-border/40 md:flex-row md:items-center md:justify-between">
-        <FilterBar members={board.members} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <FilterBar members={board.members} />
+          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${HEALTH_CONFIG[health].cls}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${HEALTH_CONFIG[health].dot}`} />
+            {HEALTH_CONFIG[health].label}
+          </span>
+          {needsClientCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-500/10">
+              <Clock className="w-3 h-3" />
+              {needsClientCount} waiting on client
+            </span>
+          )}
+        </div>
         <ProgressBar />
       </div>
     </div>
+
+    {/* Mobile floating action button — opens the same New Task dialog */}
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="fixed bottom-6 right-6 z-50 md:hidden flex items-center justify-center h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
+      aria-label="New task"
+    >
+      <Plus className="h-6 w-6" />
+    </button>
+    </>
   );
 }

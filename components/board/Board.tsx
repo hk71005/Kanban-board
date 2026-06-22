@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DndContext,
   DragEndEvent,
@@ -14,6 +15,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
+import { PlusCircle } from 'lucide-react';
 
 import { useBoardStore } from '@/store/board';
 import { BoardWithDetails, ColumnWithTasks, TaskWithDetails } from '@/types';
@@ -26,23 +28,40 @@ import BoardHeader from './BoardHeader';
 import AddColumnDialog from './AddColumnDialog';
 import dynamic from 'next/dynamic';
 const TaskDialog = dynamic(() => import('@/components/tasks/TaskDialog'), { ssr: false });
+const OnboardingBanner = dynamic(() => import('@/components/shared/OnboardingBanner'), { ssr: false });
 
 interface BoardProps {
   initialBoardData: BoardWithDetails;
   currentUserId: string;
+  initialTaskId?: string;
 }
 
-export default function Board({ initialBoardData, currentUserId }: BoardProps) {
-  const { board, columns, setBoard, setCurrentUserId, setColumns, searchQuery, priorityFilters, assigneeFilter } = useBoardStore((state) => state);
+export default function Board({ initialBoardData, currentUserId, initialTaskId }: BoardProps) {
+  const { board, columns, setBoard, setCurrentUserId, setColumns, searchQuery, priorityFilters, assigneeFilter, setActiveTask: openTaskInDialog, setIsDragging } = useBoardStore((state) => state);
   const [activeColumn, setActiveColumn] = useState<ColumnWithTasks | null>(null);
   const [activeTask, setActiveTask] = useState<TaskWithDetails | null>(null);
   // Snapshot of columns at drag start — used to revert on server error.
   // Cannot use `columns` at drop time because onDragOver has already mutated it.
   const preDragColumnsRef = useRef<ColumnWithTasks[]>([]);
+  const openedInitialTask = useRef(false);
+  const router = useRouter();
 
   useEffect(() => {
     setBoard(initialBoardData);
     setCurrentUserId(currentUserId);
+    if (initialTaskId && !openedInitialTask.current) {
+      openedInitialTask.current = true;
+      const task = initialBoardData.columns
+        .flatMap((c) => c.tasks)
+        .find((t) => t.id === initialTaskId);
+      if (task) {
+        openTaskInDialog(task);
+      } else {
+        router.replace(`/boards/${initialBoardData.id}`);
+        toast.error('Task not found — it may have been deleted.');
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialBoardData, currentUserId, setBoard, setCurrentUserId]);
 
   useEffect(() => {
@@ -103,6 +122,7 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
   }
 
   const onDragStart = (event: DragStartEvent) => {
+    setIsDragging(true);
     preDragColumnsRef.current = columns;
     if (event.active.data.current?.type === 'Column') {
       setActiveColumn(event.active.data.current.column);
@@ -114,9 +134,16 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
     }
   };
 
+  const onDragCancel = () => {
+    setActiveColumn(null);
+    setActiveTask(null);
+    setIsDragging(false);
+  };
+
   const onDragEnd = async (event: DragEndEvent) => {
     setActiveColumn(null);
     setActiveTask(null);
+    setIsDragging(false);
 
     const { active, over } = event;
     if (!over) return;
@@ -337,6 +364,7 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
     <div className="flex flex-col h-full">
       <TaskDialog />
       <BoardHeader board={board} currentUserId={currentUserId} />
+      <OnboardingBanner />
       <div className="flex-1 overflow-x-auto snap-x snap-mandatory scroll-smooth px-4 py-4">
         {columns.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[320px] text-center">
@@ -352,6 +380,7 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDragOver={onDragOver}
+            onDragCancel={onDragCancel}
           >
             <div className="flex h-full gap-4 min-w-full">
               <SortableContext items={columnsId}>
@@ -359,6 +388,15 @@ export default function Board({ initialBoardData, currentUserId }: BoardProps) {
                   <Column key={col.id} column={col} />
                 ))}
               </SortableContext>
+              <AddColumnDialog
+                boardId={board.id}
+                trigger={
+                  <div className="flex flex-col items-center justify-center w-[85vw] shrink-0 md:w-48 md:flex-none h-full rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5 transition-colors duration-200 cursor-pointer group snap-start">
+                    <PlusCircle className="w-5 h-5 text-muted-foreground/40 group-hover:text-primary/60 transition-colors mb-1.5" />
+                    <span className="text-xs font-medium text-muted-foreground/50 group-hover:text-foreground/70 transition-colors">Add column</span>
+                  </div>
+                }
+              />
             </div>
             {createPortal(
               <DragOverlay activeColumn={activeColumn} activeTask={activeTask} />,

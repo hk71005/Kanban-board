@@ -5,9 +5,8 @@ import Board from '@/components/board/Board';
 import type { BoardWithDetails } from '@/types';
 
 interface BoardPageProps {
-  params: Promise<{
-    id: string;
-  }>;
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ task?: string }>;
 }
 
 export async function generateMetadata({ params }: BoardPageProps) {
@@ -23,8 +22,9 @@ export async function generateMetadata({ params }: BoardPageProps) {
   };
 }
 
-export default async function BoardPage({ params }: BoardPageProps) {
+export default async function BoardPage({ params, searchParams }: BoardPageProps) {
   const { id } = await params;
+  const { task: initialTaskId } = await searchParams;
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -89,5 +89,5 @@ export default async function BoardPage({ params }: BoardPageProps) {
     })),
   };
 
-  return <Board initialBoardData={boardWithDetails} currentUserId={session.user.id} />;
+  return <Board initialBoardData={boardWithDetails} currentUserId={session.user.id} initialTaskId={initialTaskId} />;
 }

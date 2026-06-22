@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import db from './db';
+import { seedDemoBoard } from './seed';
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' },
@@ -50,7 +51,13 @@ export const authOptions: NextAuthOptions = {
     async signIn({ account, profile }) {
       if (account?.provider === 'google') {
         if (!profile?.email || !(profile as { email_verified?: boolean }).email_verified) return false;
-        await db.user.upsert({
+
+        const existingUser = await db.user.findUnique({
+          where: { email: profile.email },
+          select: { id: true },
+        });
+
+        const dbUser = await db.user.upsert({
           where: { email: profile.email },
           update: { name: profile.name ?? null },
           create: {
@@ -62,6 +69,14 @@ export const authOptions: NextAuthOptions = {
             password: await bcrypt.hash(crypto.randomUUID(), 10),
           },
         });
+
+        if (!existingUser) {
+          try {
+            await seedDemoBoard(dbUser.id);
+          } catch (err) {
+            console.error('[google-signin] demo board seed failed:', err);
+          }
+        }
       }
       return true;
     },

@@ -58,6 +58,7 @@ export async function createBoard(values: z.infer<typeof boardSchema>) {
         title,
         emoji,
         userId: session.user.id,
+        shareToken: crypto.randomBytes(32).toString('hex'),
         members: {
           create: [{ userId: session.user.id, role: 'OWNER' }],
         },
@@ -93,6 +94,7 @@ export async function createBoardWithTemplate(
         title,
         emoji: values.emoji || 'Kanban',
         userId: session.user.id,
+        shareToken: crypto.randomBytes(32).toString('hex'),
         members: {
           create: [{ userId: session.user.id, role: 'OWNER' }],
         },

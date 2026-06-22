@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { isToday, isPast, startOfDay } from 'date-fns';
-import { MessageSquare, CheckSquare } from 'lucide-react';
+import { MessageSquare, CheckSquare, Clock } from 'lucide-react';
 
 import { TaskWithDetails } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -47,18 +47,10 @@ export default function TaskCard({ task }: TaskCardProps) {
     ? board?.members.find((m) => m.user.id === task.assignee)
     : null;
 
-  // Left accent bar: overdue/today states override priority color.
-  // 4px for date-driven urgency, 3px for priority-only accents.
   const accentStyle = (): React.CSSProperties => {
     if (isOverdue) return { borderLeftWidth: '4px', borderLeftStyle: 'solid', borderLeftColor: 'hsl(var(--destructive))' };
     if (isDueToday) return { borderLeftWidth: '4px', borderLeftStyle: 'solid', borderLeftColor: '#f59e0b' };
-    const colors: Record<string, string> = {
-      URGENT: '#ef4444',
-      HIGH:   '#f97316',
-      MEDIUM: '#f59e0b',
-      LOW:    '#60a5fa',
-    };
-    return { borderLeftWidth: '3px', borderLeftStyle: 'solid', borderLeftColor: colors[task.priority] ?? '#60a5fa' };
+    return { borderLeftWidth: '3px', borderLeftStyle: 'solid', borderLeftColor: 'transparent' };
   };
 
   if (isDragging) {
@@ -89,7 +81,7 @@ export default function TaskCard({ task }: TaskCardProps) {
       aria-label={`Open task: ${task.title}`}
     >
       <Card
-        className="cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5"
+        className="rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
         style={accentStyle()}
       >
         <CardHeader className="p-3 pb-1.5">
@@ -114,6 +106,14 @@ export default function TaskCard({ task }: TaskCardProps) {
           )}
         </CardHeader>
         <CardContent className="px-3 pb-2.5 pt-0">
+          {task.needsClient && (
+            <div className="mb-1.5">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                <Clock className="w-3 h-3" />
+                Waiting on client
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
               <PriorityBadge priority={task.priority} />

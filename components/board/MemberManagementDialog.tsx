@@ -136,12 +136,15 @@ export default function MemberManagementDialog({ board, currentUserId }: MemberM
         <Button variant="outline" size="sm" className="flex items-center gap-2" aria-label="Manage members">
           <MemberAvatars members={board.members} />
           <Users className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-sm font-medium">Members</span>
+          <span className="text-sm font-medium hidden sm:inline">Members</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Board Members</DialogTitle>
+          <p className="text-sm text-muted-foreground pt-0.5">
+            Invite collaborators who need to edit tasks. To give a client read-only access, use Share instead.
+          </p>
         </DialogHeader>
         <div className="pt-2 space-y-1">
           {/* Board owner row */}

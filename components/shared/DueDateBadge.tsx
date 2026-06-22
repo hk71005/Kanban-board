@@ -1,6 +1,5 @@
 import { format, isPast, isToday, startOfDay } from 'date-fns';
 import { Clock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface DueDateBadgeProps {
@@ -13,17 +12,16 @@ export default function DueDateBadge({ dueDate }: DueDateBadgeProps) {
   const dueToday = isToday(date);
 
   return (
-    <Badge
-      variant="outline"
+    <span
       className={cn(
-        'flex items-center gap-1 text-xs font-normal',
-        overdue && 'border-destructive/50 bg-destructive/10 text-destructive',
-        dueToday && !overdue && 'border-warning/50 bg-warning/10 text-warning',
+        'inline-flex items-center gap-1 text-xs',
+        overdue && 'rounded px-1.5 py-0.5 border border-destructive/50 bg-destructive/10 text-destructive',
+        dueToday && !overdue && 'rounded px-1.5 py-0.5 border border-warning/50 bg-warning/10 text-warning',
         !overdue && !dueToday && 'text-muted-foreground'
       )}
     >
       <Clock className="w-3 h-3" />
       <span>{format(date, 'MMM d')}</span>
-    </Badge>
+    </span>
   );
 }

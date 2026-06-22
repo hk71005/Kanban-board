@@ -62,7 +62,7 @@ export default function Image() {
             lineHeight: 1.4,
           }}
         >
-          The Kanban board your team will actually use.
+          The Kanban board built for freelancers and their clients.
         </div>
 
         {/* Badge */}

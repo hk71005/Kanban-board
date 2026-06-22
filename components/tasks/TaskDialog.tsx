@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useBoardStore } from '@/store/board';
 import type { CommentWithUser } from '@/types';
 import {
@@ -9,6 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import TaskForm from './TaskForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CommentSection from './CommentSection';
@@ -18,8 +23,17 @@ export default function TaskDialog() {
   const { activeTask, setActiveTask } = useBoardStore();
   const taskRef = useRef(activeTask);
   taskRef.current = activeTask;
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Close dialog on escape key
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // Close on escape key (Radix also handles this natively, kept for safety)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -56,6 +70,45 @@ export default function TaskDialog() {
     return null;
   }
 
+  const commentsAndActivity = (
+    <Tabs defaultValue="comments" className="flex min-h-0 flex-1 flex-col w-full">
+      <TabsList className="grid w-full grid-cols-2 shrink-0">
+        <TabsTrigger value="comments">Comments</TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
+      </TabsList>
+      <TabsContent value="comments" className="mt-3 min-h-0 flex-1 overflow-y-auto">
+        <CommentSection task={activeTask} />
+      </TabsContent>
+      <TabsContent value="activity" className="mt-3 min-h-0 flex-1 overflow-y-auto">
+        <ActivityFeed taskId={activeTask.id} />
+      </TabsContent>
+    </Tabs>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={!!activeTask} onOpenChange={handleOpenChange}>
+        <SheetContent side="bottom" showCloseButton={false} className="p-0 rounded-t-2xl">
+          <div className="flex flex-col h-[90vh] overflow-hidden">
+            {/* Accessible title (visually hidden) */}
+            <SheetTitle className="sr-only">{activeTask.title}</SheetTitle>
+            {/* Drag handle affordance */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/25" />
+            </div>
+            {/* Single scrollable column: form + tabs */}
+            <div className="flex-1 overflow-y-auto px-4 pt-2 pb-8">
+              <TaskForm task={activeTask} />
+              <div className="mt-4 pt-4 border-t">
+                {commentsAndActivity}
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <Dialog open={!!activeTask} onOpenChange={handleOpenChange}>
       {/*
@@ -79,18 +132,7 @@ export default function TaskDialog() {
 
           {/* Right: comments / activity — flex column so Tabs fills height */}
           <div className="flex min-h-0 flex-col border-l pl-4">
-            <Tabs defaultValue="comments" className="flex min-h-0 flex-1 flex-col w-full">
-              <TabsList className="grid w-full grid-cols-2 shrink-0">
-                <TabsTrigger value="comments">Comments</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-              </TabsList>
-              <TabsContent value="comments" className="mt-3 min-h-0 flex-1 overflow-y-auto">
-                <CommentSection task={activeTask} />
-              </TabsContent>
-              <TabsContent value="activity" className="mt-3 min-h-0 flex-1 overflow-y-auto">
-                <ActivityFeed taskId={activeTask.id} />
-              </TabsContent>
-            </Tabs>
+            {commentsAndActivity}
           </div>
         </div>
       </DialogContent>

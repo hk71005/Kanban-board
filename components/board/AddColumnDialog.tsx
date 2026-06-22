@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, type ReactElement } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PlusCircle } from 'lucide-react';
@@ -34,9 +34,10 @@ const COLORS = [
 
 interface AddColumnDialogProps {
   boardId: string;
+  trigger?: ReactElement;
 }
 
-export default function AddColumnDialog({ boardId }: AddColumnDialogProps) {
+export default function AddColumnDialog({ boardId, trigger }: AddColumnDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -68,10 +69,12 @@ export default function AddColumnDialog({ boardId }: AddColumnDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <PlusCircle className="w-4 h-4 mr-2" />
-          Add Column
-        </Button>
+        {trigger ?? (
+          <Button variant="outline">
+            <PlusCircle className="w-4 h-4 mr-2" />
+            Add Column
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

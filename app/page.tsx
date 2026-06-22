@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
@@ -20,6 +21,12 @@ import { Button } from '@/components/ui/button';
 import EmailCapture from '@/components/landing/EmailCapture';
 import { testimonials } from '@/lib/testimonials';
 import type { Testimonial } from '@/lib/testimonials';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://kanvi.app',
+  },
+};
 
 const KanbanLogo = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -128,8 +135,8 @@ export default async function HomePage() {
     },
     {
       icon: <Users className="w-4 h-4" />,
-      title: 'Team roles',
-      desc: 'Invite members as Owners, Editors, or Viewers. Control exactly who can change what on each board.',
+      title: 'Client access',
+      desc: 'Share a read-only board link with any client — no account needed. Invite collaborators as Editors or Viewers and control who can change what.',
     },
     {
       icon: <MessageSquare className="w-4 h-4" />,
@@ -154,16 +161,35 @@ export default async function HomePage() {
     },
     {
       icon: <Users className="w-4 h-4" />,
-      text: 'Built for teams from day one — not a solo tool with collaboration bolted on later.',
+      text: 'Share your board with any client in one click — no account, no login, no friction.',
     },
     {
       icon: <BarChart3 className="w-4 h-4" />,
-      text: 'Every feature that ships is one your team will actually use. No feature graveyard.',
+      text: 'Every feature that ships is one you will actually use. No feature graveyard.',
     },
   ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'Kanvi',
+            applicationCategory: 'ProjectManagementApplication',
+            operatingSystem: 'Web',
+            description: 'Client project workspace for freelancers.',
+            url: 'https://kanvi.app',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+            },
+          }),
+        }}
+      />
 
       {/* ── Navbar ───────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -211,14 +237,14 @@ export default async function HomePage() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-bold tracking-tight leading-tight mb-6">
-            The Kanban board your
+            The Kanban board built for
             <br />
-            <span className="text-primary">team will actually use.</span>
+            <span className="text-primary">freelancers and their clients.</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Boards, tasks, due dates, and team roles — without the setup tax.
-            No Power-Ups. No plugins. No credit card. Start in 30 seconds.
+            One board per client. Share live progress with a link — no client login needed.
+            Unlimited projects, no per-seat fees. Start in 30 seconds.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
@@ -238,7 +264,7 @@ export default async function HomePage() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mb-12">
-            Built for small teams and solo founders. Not enterprise software.
+            Built for freelancers and consultants. Not enterprise software.
           </p>
 
           {/* ── Board mockup ─────────────────────────────────────────────── */}
@@ -251,7 +277,7 @@ export default async function HomePage() {
               </MockColumn>
               <MockColumn title="In Progress" dotColor="#fbbf24" count={2}>
                 <MockTaskCard title="Update client proposal" priorityColor="#f97316" priorityLabel="High" accent />
-                <MockTaskCard title="Prepare team presentation" priorityColor="#fbbf24" priorityLabel="Medium" />
+                <MockTaskCard title="Prepare client proposal" priorityColor="#fbbf24" priorityLabel="Medium" />
               </MockColumn>
               <MockColumn title="Review" dotColor="#a78bfa" count={1}>
                 <div className="bg-card rounded-md p-2.5 border border-border shadow-sm">
@@ -280,7 +306,7 @@ export default async function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold tracking-tight mb-4">
-              Everything your team needs to move faster
+              Everything you need to manage client work
             </h2>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
               Three things that actually matter in a project tool — and nothing that doesn't.
@@ -296,7 +322,7 @@ export default async function HomePage() {
               {
                 icon: <Users className="w-5 h-5 text-primary" />,
                 title: 'Collaborate',
-                desc: 'Invite team members, assign tasks, manage permissions, and keep the full conversation on every task.',
+                desc: 'Share a live board link with any client — no login required. Invite collaborators as editors and keep every conversation on the task itself.',
               },
               {
                 icon: <BarChart3 className="w-5 h-5 text-primary" />,
@@ -404,7 +430,7 @@ export default async function HomePage() {
                     {[
                       { label: 'Gather competitor analysis', done: true },
                       { label: 'Draft executive summary', done: true },
-                      { label: 'Final review with team', done: false },
+                      { label: 'Client final review', done: false },
                     ].map((sub) => (
                       <div key={sub.label} className="flex items-center gap-2 text-xs">
                         <span
@@ -451,9 +477,9 @@ export default async function HomePage() {
             H
           </div>
           <blockquote className="text-lg text-foreground leading-relaxed mb-5">
-            "I built Kanvi because I was managing multiple projects and kept hitting paywalls
-            and bloated workflows. I wanted something simple enough for a solo founder,
-            powerful enough for a small team — so I built it."
+            "I built Kanvi because I was managing multiple client projects and kept hitting
+            paywalls and bloated workflows. I wanted something fast enough for a solo
+            freelancer, professional enough to share directly with clients — so I built it."
           </blockquote>
           <p className="text-sm text-muted-foreground font-medium">
             Hari · Founder
@@ -474,8 +500,8 @@ export default async function HomePage() {
               Built with early users, not just for them
             </h2>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Kanvi is shaped by freelancers, solo founders, and small teams who wanted
-              something that actually stays out of the way.
+              Kanvi is shaped by freelancers and consultants who needed to track client
+              work without the overhead of enterprise project tools.
             </p>
           </div>
 
@@ -485,7 +511,7 @@ export default async function HomePage() {
               {
                 icon: <Users className="w-5 h-5 text-primary" />,
                 title: 'Made for your kind of work',
-                desc: 'Freelancers juggling clients. Solo founders with ten priorities. Small teams tired of tools that assume you have a full ops department.',
+                desc: 'Freelancers managing multiple clients. Consultants who need one board per project. Anyone tired of paying per-seat fees just to give a client visibility.',
               },
               {
                 icon: <MessageSquare className="w-5 h-5 text-primary" />,
@@ -670,6 +696,20 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── What is Kanvi? — AI search / LLM discoverability ────────────── */}
+      <section className="py-16 px-4 bg-surface/40" aria-labelledby="what-is-kanvi">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 id="what-is-kanvi" className="text-2xl font-bold tracking-tight mb-4">
+            What is Kanvi?
+          </h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Kanvi is a client project workspace built for freelancers, consultants, and creative
+            professionals. It helps you organize client work, share live project updates, and
+            provide client visibility without requiring client accounts or logins.
+          </p>
+        </div>
+      </section>
+
       {/* ── Final CTA ────────────────────────────────────────────────────── */}
       <section
         className="py-24 px-4 text-center"
@@ -680,7 +720,7 @@ export default async function HomePage() {
       >
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            Your team's next board is 30 seconds away.
+            Your next client board is 30 seconds away.
           </h2>
           <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
             Create your first board in seconds. No credit card. No setup wizard.

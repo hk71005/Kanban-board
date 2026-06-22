@@ -6,10 +6,11 @@ export const usePolling = (interval: number) => {
   const router = useRouter();
   const intervalId = useRef<NodeJS.Timeout | null>(null);
   const activeTask = useBoardStore((s) => s.activeTask);
+  const isDragging = useBoardStore((s) => s.isDragging);
 
   useEffect(() => {
     intervalId.current = setInterval(() => {
-      if (!activeTask) {
+      if (!activeTask && !isDragging) {
         router.refresh();
       }
     }, interval);
@@ -19,5 +20,5 @@ export const usePolling = (interval: number) => {
         clearInterval(intervalId.current);
       }
     };
-  }, [router, interval, activeTask]);
+  }, [router, interval, activeTask, isDragging]);
 };

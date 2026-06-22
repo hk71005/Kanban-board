@@ -52,7 +52,7 @@ export default async function BoardsPage() {
         { members: { some: { userId: session.user.id } } },
       ],
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { updatedAt: 'desc' },
     include: {
       _count: { select: { columns: true, members: true } },
       columns: {

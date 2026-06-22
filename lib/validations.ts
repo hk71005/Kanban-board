@@ -35,6 +35,7 @@ export const taskSchema = z.object({
   dueDate: z.date().optional().nullable(),
   assignee: z.string().optional().nullable(),
   storyPoints: z.number().int().positive().optional().nullable(),
+  needsClient: z.boolean().optional(),
   labels: z.array(z.object({ name: z.string(), color: z.string() })).optional(),
   subtasks: z.array(z.object({ title: z.string() })).optional(),
 });

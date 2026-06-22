@@ -65,6 +65,7 @@ export async function GET(
     'Labels',
     'Due Date',
     'Assignee',
+    'Waiting on Client',
     'Subtasks',
   ];
 
@@ -88,6 +89,7 @@ export async function GET(
         labels,
         dueDate,
         assignee,
+        task.needsClient ? 'Yes' : 'No',
         subtasks,
       ]);
     }

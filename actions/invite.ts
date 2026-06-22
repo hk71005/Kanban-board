@@ -54,20 +54,12 @@ export async function acceptInvite(token: string) {
     return { error: 'mismatch' as const, inviteEmail: invite.email };
   }
 
-  // Idempotent — safe to call twice if the user refreshes
-  const existingMember = await db.boardMember.findUnique({
+  // Upsert is atomic — concurrent acceptance attempts cannot produce duplicate rows.
+  await db.boardMember.upsert({
     where: { userId_boardId: { userId: session.user.id, boardId: invite.boardId } },
+    create: { boardId: invite.boardId, userId: session.user.id, role: invite.role },
+    update: {},
   });
-
-  if (!existingMember) {
-    await db.boardMember.create({
-      data: {
-        boardId: invite.boardId,
-        userId: session.user.id,
-        role: invite.role,
-      },
-    });
-  }
 
   await db.boardInvite.update({
     where: { id: invite.id },

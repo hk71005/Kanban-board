@@ -66,6 +66,7 @@ model Task {
   dueDate      DateTime?
   assignee     String?
   storyPoints  Int?
+  needsClient  Boolean       @default(false)
   columnId     String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

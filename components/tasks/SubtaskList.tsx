@@ -13,9 +13,10 @@ import { useBoardStore } from '@/store/board';
 
 interface SubtaskListProps {
   task: TaskWithDetails;
+  canEdit?: boolean;
 }
 
-export default function SubtaskList({ task }: SubtaskListProps) {
+export default function SubtaskList({ task, canEdit = true }: SubtaskListProps) {
   const [isPending, startTransition] = useTransition();
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const { updateSubtaskInStore, addSubtaskToStore, deleteSubtaskFromStore } = useBoardStore();
@@ -75,7 +76,7 @@ export default function SubtaskList({ task }: SubtaskListProps) {
               id={subtask.id}
               checked={subtask.completed}
               onCheckedChange={(checked) => handleToggle(subtask.id, !!checked, subtask.title)}
-              disabled={isPending || subtask.id.startsWith('temp-')}
+              disabled={!canEdit || isPending || subtask.id.startsWith('temp-')}
             />
             <label
               htmlFor={subtask.id}
@@ -85,7 +86,7 @@ export default function SubtaskList({ task }: SubtaskListProps) {
             >
               {subtask.title}
             </label>
-            {!subtask.id.startsWith('temp-') && (
+            {canEdit && !subtask.id.startsWith('temp-') && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -99,18 +100,20 @@ export default function SubtaskList({ task }: SubtaskListProps) {
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-2 pt-2">
-        <Input
-          value={newSubtaskTitle}
-          onChange={(e) => setNewSubtaskTitle(e.target.value)}
-          placeholder="Add a new subtask"
-          onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
-          disabled={isPending}
-        />
-        <Button onClick={handleAddSubtask} disabled={isPending}>
-          <Plus className="w-4 h-4" />
-        </Button>
-      </div>
+      {canEdit && (
+        <div className="flex items-center gap-2 pt-2">
+          <Input
+            value={newSubtaskTitle}
+            onChange={(e) => setNewSubtaskTitle(e.target.value)}
+            placeholder="Add a new subtask"
+            onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
+            disabled={isPending}
+          />
+          <Button onClick={handleAddSubtask} disabled={isPending}>
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

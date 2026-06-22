@@ -19,7 +19,7 @@ import UserAvatar from '@/components/shared/UserAvatar';
 import { ThemeToggle } from './ThemeToggle';
 import BoardSelector from './BoardSelector';
 import KeyboardShortcutsDialog from '@/components/shared/KeyboardShortcutsDialog';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface NavbarProps {
   user: User;
@@ -49,10 +49,19 @@ export default function Navbar({ user, boards }: NavbarProps) {
             <span className="font-bold tracking-tight">Kanvi</span>
           </Link>
           {/* Live indicator */}
-          <span className="relative flex w-2 h-2">
-            <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-success"></span>
-            <span className="relative inline-flex w-2 h-2 rounded-full bg-success"></span>
-          </span>
+          <TooltipProvider delayDuration={400}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="relative flex w-2 h-2 cursor-default">
+                  <span className="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-success"></span>
+                  <span className="relative inline-flex w-2 h-2 rounded-full bg-success"></span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Board syncs automatically</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <TooltipProvider delayDuration={400}>
@@ -90,9 +99,11 @@ export default function Navbar({ user, boards }: NavbarProps) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="md:hidden" />
-              <DropdownMenuItem>
-                <Settings className="w-4 h-4 mr-2" />
-                <span>Settings</span>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link href="/settings" className="flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

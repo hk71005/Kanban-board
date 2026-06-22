@@ -5,8 +5,12 @@ import db from '@/lib/db';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function GET(request: Request) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return new NextResponse('Service not configured', { status: 503 });
+  }
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
@@ -30,7 +34,20 @@ export async function GET(request: Request) {
     },
   });
 
-  // Group tasks by board owner email
+  // Resolve assignee emails in one query
+  const assigneeIds = [...new Set(tasks.map((t) => t.assignee).filter(Boolean))] as string[];
+  const assigneeUsers =
+    assigneeIds.length > 0
+      ? await db.user.findMany({
+          where: { id: { in: assigneeIds } },
+          select: { id: true, email: true, name: true },
+        })
+      : [];
+  const assigneeById = new Map(assigneeUsers.map((u) => [u.id, u]));
+
+  // Group tasks by recipient email. Each task goes to the board owner; if an
+  // assignee exists and their email differs from the owner's, they also receive it.
+  // Using email as the map key naturally deduplicates owner == assignee cases.
   const byEmail = new Map<string, {
     name: string | null;
     email: string;
@@ -38,9 +55,18 @@ export async function GET(request: Request) {
   }>();
 
   for (const task of tasks) {
-    const { email, name } = task.column.board.user;
-    if (!byEmail.has(email)) byEmail.set(email, { email, name, tasks: [] });
-    byEmail.get(email)!.tasks.push(task);
+    const { email: ownerEmail, name: ownerName } = task.column.board.user;
+
+    if (!byEmail.has(ownerEmail)) byEmail.set(ownerEmail, { email: ownerEmail, name: ownerName, tasks: [] });
+    byEmail.get(ownerEmail)!.tasks.push(task);
+
+    if (task.assignee) {
+      const assignee = assigneeById.get(task.assignee);
+      if (assignee && assignee.email !== ownerEmail) {
+        if (!byEmail.has(assignee.email)) byEmail.set(assignee.email, { email: assignee.email, name: assignee.name, tasks: [] });
+        byEmail.get(assignee.email)!.tasks.push(task);
+      }
+    }
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? 'https://kanvi.app';

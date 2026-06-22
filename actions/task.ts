@@ -74,7 +74,7 @@ export async function createTask(
     return { error: 'Invalid fields' };
   }
 
-  const { title, description, priority, dueDate, assignee, storyPoints } = validatedFields.data;
+  const { title, description, priority, dueDate, assignee, storyPoints, needsClient } = validatedFields.data;
 
   try {
     const maxOrder = await db.task.aggregate({
@@ -90,6 +90,7 @@ export async function createTask(
         dueDate,
         assignee,
         storyPoints,
+        needsClient: needsClient ?? false,
         columnId,
         order: (maxOrder._max.order ?? -1) + 1,
       },
@@ -168,6 +169,17 @@ export async function updateTask(
     revalidatePath(`/boards/${board.id}`);
     return { success: 'Task updated!' };
   } catch (error) {
+    return { error: 'Failed to update task' };
+  }
+}
+
+export async function toggleNeedsClient(taskId: string, value: boolean) {
+  const { board } = await checkTaskPermissions(taskId);
+  try {
+    await db.task.update({ where: { id: taskId }, data: { needsClient: value } });
+    revalidatePath(`/boards/${board.id}`);
+    return { success: true };
+  } catch {
     return { error: 'Failed to update task' };
   }
 }

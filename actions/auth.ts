@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 
 import db from '@/lib/db';
+import { seedDemoBoard } from '@/lib/seed';
 import { loginSchema, registerSchema } from '@/lib/validations';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -49,79 +50,58 @@ export async function register(values: z.infer<typeof registerSchema>) {
     return { error: 'Email already in use.' };
   }
 
-  const user = await db.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-    },
-  });
-
-  // Create a default "Personal Productivity" board for the new user
-  let boardId: string | undefined;
+  let user: { id: string; name: string | null; email: string };
   try {
-    const defaultCols = [
-      { title: 'Ideas', color: '#a78bfa', tasks: [] as string[] },
-      { title: 'Today', color: '#f59e0b', tasks: ['Plan the week', 'Review priorities'] },
-      { title: 'This Week', color: '#3b82f6', tasks: [] as string[] },
-      { title: 'Completed', color: '#22c55e', tasks: [] as string[] },
-    ];
+    user = await db.user.create({ data: { name, email, password: hashedPassword } });
+  } catch (e) {
+    if ((e as { code?: string }).code === 'P2002') {
+      return { error: 'Email already in use.' };
+    }
+    return { error: 'Failed to create account. Please try again.' };
+  }
 
-    const board = await db.board.create({
-      data: {
-        title: 'My First Board',
-        emoji: 'Target',
-        userId: user.id,
-        members: {
-          create: [{ userId: user.id, role: 'OWNER' }],
-        },
-      },
-    });
-
-    await db.$transaction(async (tx) => {
-      for (let i = 0; i < defaultCols.length; i++) {
-        const col = defaultCols[i];
-        const column = await tx.column.create({
-          data: { title: col.title, color: col.color, order: i, boardId: board.id },
-        });
-        for (let j = 0; j < col.tasks.length; j++) {
-          await tx.task.create({
-            data: { title: col.tasks[j], priority: 'MEDIUM', order: j, columnId: column.id },
-          });
-        }
-      }
-    });
-
-    boardId = board.id;
+  let boardId: string | undefined;
+  const boardTitle = 'Website Redesign';
+  try {
+    boardId = await seedDemoBoard(user.id);
   } catch (err) {
     console.error('[register] default board creation failed:', err);
   }
 
   // Send welcome email — awaited so Vercel does not cut the request before delivery
+  const firstName = name.split(' ')[0];
   const baseUrl = process.env.NEXTAUTH_URL ?? 'https://kanvi.app';
   const boardUrl = boardId ? `${baseUrl}/boards/${boardId}` : `${baseUrl}/boards`;
   try {
     await resend.emails.send({
-      from: 'Kanvi <hello@kanvi.app>',
+      from: 'Hari from Kanvi <hello@kanvi.app>',
       to: email,
-      subject: `Welcome to Kanvi, ${name}!`,
+      subject: `Welcome to Kanvi, ${firstName}!`,
       html: `
-        <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#09090b">
-          <p style="font-size:20px;font-weight:700;margin:0 0 8px">Welcome to Kanvi, ${name}!</p>
-          <p style="font-size:14px;color:#71717a;margin:0 0 24px">
-            Your account is ready. We've created your first board to help you hit the ground running.
-          </p>
-          <a href="${boardUrl}"
-             style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">
-            Open your board
-          </a>
-          <p style="font-size:12px;color:#a1a1aa;margin:24px 0 0">
-            Questions? Just reply to this email — I read every one.<br/>
-            — Hari, Founder
-          </p>
-          <p style="font-size:11px;color:#d4d4d8;margin:20px 0 0;border-top:1px solid #f4f4f5;padding-top:16px">
-            You received this because you created a Kanvi account.
-          </p>
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;background:#ffffff;color:#09090b">
+          <div style="padding:16px 24px 14px;border-bottom:1px solid #f4f4f5;border-top:3px solid #7c3aed">
+            <span style="font-size:15px;font-weight:800;color:#7c3aed;letter-spacing:-0.3px">Kanvi</span>
+          </div>
+          <div style="padding:24px 24px 20px">
+            <p style="font-size:20px;font-weight:700;margin:0 0 10px;line-height:1.25;color:#09090b">Hi ${firstName}, welcome aboard.</p>
+            <p style="font-size:14px;color:#52525b;margin:0 0 24px;line-height:1.65">
+              Your account is ready. We've set up your first board &mdash; <strong style="color:#09090b">${boardTitle}</strong> &mdash; with a few columns to get you started.
+            </p>
+            <a href="${boardUrl}"
+               style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">
+              Open your board &rarr;
+            </a>
+            <p style="font-size:13px;color:#71717a;margin:20px 0 0;line-height:1.65">
+              Once you're in, press <strong style="color:#09090b">N</strong> to add a task, or click <strong style="color:#09090b">Share</strong> to send your client a live progress link.
+            </p>
+            <p style="font-size:13px;color:#71717a;margin:20px 0 0;line-height:1.65">
+              Questions? Just reply &mdash; I read every one.<br/>
+              <strong style="color:#09090b">Hari</strong>, Founder &middot; Kanvi
+            </p>
+          </div>
+          <div style="padding:14px 24px;border-top:1px solid #f4f4f5">
+            <p style="font-size:11px;color:#a1a1aa;margin:0;line-height:1.5">You received this because you created a Kanvi account.</p>
+          </div>
         </div>
       `,
     });

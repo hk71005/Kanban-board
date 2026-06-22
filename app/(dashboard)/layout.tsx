@@ -26,7 +26,7 @@ export default async function DashboardLayout({
       emoji: true,
     },
     orderBy: {
-      createdAt: 'asc',
+      updatedAt: 'desc',
     },
   });
 

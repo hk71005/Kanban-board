@@ -1,7 +1,25 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
 import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
+
+export const metadata: Metadata = {
+  title: 'Pricing — Kanvi',
+  description: 'Kanvi is free. Unlimited boards, unlimited tasks, client sharing with no account required — no credit card, no trial.',
+  alternates: {
+    canonical: 'https://kanvi.app/pricing',
+  },
+  openGraph: {
+    title: 'Pricing — Kanvi',
+    description: 'Kanvi is free. Unlimited boards, unlimited tasks, client sharing with no account required — no credit card, no trial.',
+    url: 'https://kanvi.app/pricing',
+  },
+  twitter: {
+    title: 'Pricing — Kanvi',
+    description: 'Kanvi is free. Unlimited boards, unlimited tasks, client sharing with no account required — no credit card, no trial.',
+  },
+};
 
 const KanbanLogo = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -23,19 +41,18 @@ const freeTierFeatures = [
   'Drag-and-drop task management',
   'Due dates, priorities, and labels',
   'Subtasks and comments',
-  'Team roles (Owner, Editor, Viewer)',
-  'Board templates',
+  'Shareable read-only client links',
+  'Viewer / Editor / Owner roles',
   'Google sign-in',
 ];
 
 const proTierFeatures = [
   'Everything in Free',
-  'Unlimited board members',
+  'Custom branding on client-shared boards',
+  'Cross-board task dashboard',
+  'Recurring tasks',
   'Advanced permission controls',
-  'Export boards (CSV)',
-  'GitHub and Slack integrations',
   'Priority support',
-  'Custom branding',
 ];
 
 export default async function PricingPage() {
@@ -94,7 +111,7 @@ export default async function PricingPage() {
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Start free during our open beta. All core features are included at no cost.
-            A Pro plan is coming for teams that need more.
+            A Pro plan is coming for freelancers who need more.
           </p>
         </div>
       </section>
@@ -113,7 +130,7 @@ export default async function PricingPage() {
             </div>
             <div className="mb-6">
               <h2 className="text-xl font-bold mb-1">Free</h2>
-              <p className="text-muted-foreground text-sm">Everything you need to get started.</p>
+              <p className="text-muted-foreground text-sm">Everything you need to manage client projects.</p>
             </div>
             <div className="mb-6">
               <span className="text-4xl font-bold">$0</span>
@@ -151,7 +168,7 @@ export default async function PricingPage() {
                   Coming soon
                 </span>
               </div>
-              <p className="text-muted-foreground text-sm">For teams that need more power.</p>
+              <p className="text-muted-foreground text-sm">For freelancers who need more.</p>
             </div>
             <div className="mb-6">
               <span className="text-4xl font-bold">$6</span>
@@ -193,8 +210,8 @@ export default async function PricingPage() {
                 a: 'Unlimited boards, unlimited tasks, unlimited columns — on the free plan.',
               },
               {
-                q: 'Can I invite my team for free?',
-                a: 'Yes. Invite team members and assign roles on any board at no cost.',
+                q: 'Can I share boards with clients for free?',
+                a: 'Yes. Share a read-only link with any client — no account needed. You can also invite collaborators with editor access at no cost.',
               },
             ].map(({ q, a }) => (
               <div key={q} className="rounded-xl border border-border bg-card p-5">

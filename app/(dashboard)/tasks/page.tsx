@@ -46,13 +46,17 @@ export default async function MyTasksPage() {
 
   const now = new Date();
 
-  const overdue = tasks.filter((t) => t.dueDate && isPast(t.dueDate) && !isToday(t.dueDate));
-  const dueToday = tasks.filter((t) => t.dueDate && isToday(t.dueDate));
-  const thisWeek = tasks.filter((t) => t.dueDate && !isPast(t.dueDate) && !isToday(t.dueDate) && isThisWeek(t.dueDate, { weekStartsOn: 1 }));
-  const later = tasks.filter((t) => t.dueDate && !isPast(t.dueDate) && !isToday(t.dueDate) && !isThisWeek(t.dueDate, { weekStartsOn: 1 }));
-  const noDueDate = tasks.filter((t) => !t.dueDate);
+  const waitingOnClient = tasks.filter((t) => t.needsClient);
+  const waitingIds = new Set(waitingOnClient.map((t) => t.id));
+
+  const overdue = tasks.filter((t) => !waitingIds.has(t.id) && t.dueDate && isPast(t.dueDate) && !isToday(t.dueDate));
+  const dueToday = tasks.filter((t) => !waitingIds.has(t.id) && t.dueDate && isToday(t.dueDate));
+  const thisWeek = tasks.filter((t) => !waitingIds.has(t.id) && t.dueDate && !isPast(t.dueDate) && !isToday(t.dueDate) && isThisWeek(t.dueDate, { weekStartsOn: 1 }));
+  const later = tasks.filter((t) => !waitingIds.has(t.id) && t.dueDate && !isPast(t.dueDate) && !isToday(t.dueDate) && !isThisWeek(t.dueDate, { weekStartsOn: 1 }));
+  const noDueDate = tasks.filter((t) => !waitingIds.has(t.id) && !t.dueDate);
 
   const groups = [
+    { label: 'Waiting on Client', icon: <Clock className="w-4 h-4 text-amber-500" />, tasks: waitingOnClient, accent: 'border-amber-500/30' },
     { label: 'Overdue', icon: <AlertCircle className="w-4 h-4 text-destructive" />, tasks: overdue, accent: 'border-destructive/30' },
     { label: 'Due Today', icon: <Clock className="w-4 h-4 text-amber-500" />, tasks: dueToday, accent: 'border-amber-500/30' },
     { label: 'This Week', icon: <Calendar className="w-4 h-4 text-primary" />, tasks: thisWeek, accent: 'border-primary/30' },
@@ -98,7 +102,7 @@ export default async function MyTasksPage() {
                 {group.tasks.map((task) => (
                   <Link
                     key={task.id}
-                    href={`/boards/${task.column.board.id}`}
+                    href={`/boards/${task.column.board.id}?task=${task.id}`}
                     className="flex items-center gap-4 px-4 py-3 bg-card hover:bg-muted/40 transition-colors group"
                   >
                     <div className="flex-1 min-w-0">

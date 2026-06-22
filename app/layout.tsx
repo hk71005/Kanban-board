@@ -5,18 +5,20 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kanvi.app'),
-  title: "Kanvi — The Kanban board your team will actually use.",
-  description: "A clean, modern Kanban workspace with drag-and-drop boards, team collaboration, due dates, subtasks, and real-time progress tracking. Free to start.",
+  title: "Kanvi — The Kanban board built for freelancers and their clients.",
+  description: "Manage client projects on a clean Kanban board. Share live progress with any client — no account needed. Unlimited boards, free to start.",
   openGraph: {
     type: 'website',
     siteName: 'Kanvi',
-    title: 'Kanvi — The Kanban board your team will actually use.',
-    description: 'A clean, modern Kanban workspace with drag-and-drop boards, team collaboration, due dates, subtasks, and real-time progress tracking. Free to start.',
+    url: 'https://kanvi.app',
+    title: 'Kanvi — The Kanban board built for freelancers and their clients.',
+    description: 'Manage client projects on a clean Kanban board. Share live progress with any client — no account needed. Unlimited boards, free to start.',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Kanvi — client project workspace for freelancers' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kanvi — The Kanban board your team will actually use.',
-    description: 'A clean, modern Kanban workspace with drag-and-drop boards, team collaboration, due dates, subtasks, and real-time progress tracking. Free to start.',
+    title: 'Kanvi — The Kanban board built for freelancers and their clients.',
+    description: 'Manage client projects on a clean Kanban board. Share live progress with any client — no account needed. Unlimited boards, free to start.',
     images: ['/opengraph-image'],
   },
 };
