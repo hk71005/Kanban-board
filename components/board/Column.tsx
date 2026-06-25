@@ -295,12 +295,15 @@ export default function Column({ column }: ColumnProps) {
               </button>
             </div>
           ) : (
-            /* Lean drop zone — just enough area for dnd-kit detection; no visual bloat */
             <div
-              className="flex-1 min-h-[52px] rounded-md border border-dashed border-muted/40 hover:border-primary/30 hover:bg-primary/5 transition-colors duration-150 cursor-pointer"
+              className="flex-1 min-h-[60px] rounded-md border border-dashed border-muted/40 hover:border-primary/30 hover:bg-primary/5 transition-colors duration-150 cursor-pointer flex items-center justify-center"
               onClick={() => setIsAddingTask(true)}
               aria-label="Drop task here or click to add"
-            />
+            >
+              <span className="text-xs text-muted-foreground/40 text-center px-4 select-none leading-snug">
+                Drop a task here or click to add
+              </span>
+            </div>
           )
         )}
       </div>
@@ -330,14 +333,14 @@ export default function Column({ column }: ColumnProps) {
             </div>
           </div>
         ) : (
-          <Button
-            variant="ghost"
-            className="w-full justify-start border border-dashed border-muted-foreground/20 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground transition-colors min-h-[44px]"
+          <button
+            type="button"
             onClick={() => setIsAddingTask(true)}
+            className="w-full flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors py-2 px-1 rounded-md hover:bg-muted/30 min-h-[44px]"
           >
-            <PlusCircle className="w-4 h-4 mr-2" />
+            <PlusCircle className="w-3.5 h-3.5 shrink-0" />
             Add task
-          </Button>
+          </button>
         )}
       </div>
     </div>

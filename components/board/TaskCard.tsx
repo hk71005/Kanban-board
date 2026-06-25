@@ -81,7 +81,7 @@ export default function TaskCard({ task }: TaskCardProps) {
       aria-label={`Open task: ${task.title}`}
     >
       <Card
-        className="rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+        className="rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
         style={accentStyle()}
       >
         <CardHeader className="p-3 pb-1.5">
