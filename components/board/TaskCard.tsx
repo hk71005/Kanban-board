@@ -38,6 +38,10 @@ export default function TaskCard({ task }: TaskCardProps) {
     transform: CSS.Transform.toString(transform),
   };
 
+  const isDone = /^(done|complete[d]?|delivered|shipped|closed|finished|resolved)$/i.test(
+    task.column?.title?.trim() ?? ''
+  );
+
   const isOverdue =
     task.dueDate && isPast(startOfDay(new Date(task.dueDate))) && !isToday(new Date(task.dueDate));
   const isDueToday = task.dueDate && isToday(new Date(task.dueDate));
@@ -85,7 +89,7 @@ export default function TaskCard({ task }: TaskCardProps) {
         style={accentStyle()}
       >
         <CardHeader className="p-3 pb-1.5">
-          <p className="text-sm font-semibold leading-snug">{task.title}</p>
+          <p className={`text-sm font-semibold leading-snug ${isDone ? 'line-through opacity-50' : ''}`}>{task.title}</p>
           {task.description && (
             <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">
               {task.description}
