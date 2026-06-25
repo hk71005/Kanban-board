@@ -31,7 +31,7 @@ export default function Navbar({ user, boards }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/60">
-      <div className="container flex items-center h-16">
+      <div className="flex items-center h-16 w-full px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <Link href="/boards" className="text-lg font-bold flex items-center gap-2">
             {/* Kanban columns logo mark */}
