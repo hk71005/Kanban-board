@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown } from 'lucide-react';
+import { ChevronsUpDown, PlusCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ export default function BoardSelector({ boards }: BoardSelectorProps) {
   const params = useParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const currentBoard = boards.find((board) => board.id === params.id);
 
@@ -45,7 +46,7 @@ export default function BoardSelector({ boards }: BoardSelectorProps) {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -87,10 +88,21 @@ export default function BoardSelector({ boards }: BoardSelectorProps) {
               </CommandGroup>
             </CommandList>
             <CommandSeparator />
+            <CommandList>
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => { setOpen(false); setCreateOpen(true); }}
+                  className="text-sm text-primary cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Create New Board
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-      <CreateBoardDialog compact />
-    </div>
+      <CreateBoardDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </>
   );
 }

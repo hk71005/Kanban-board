@@ -35,15 +35,28 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 interface CreateBoardDialogProps {
   /** When true, renders as a small icon-only button for use in the navbar */
   compact?: boolean;
+  /** Controlled open state — when provided, no trigger is rendered */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const DEFAULT_TEMPLATE_ID = 'sprint';
 const defaultTemplate = BOARD_TEMPLATES.find((t) => t.id === DEFAULT_TEMPLATE_ID)!;
 
-export default function CreateBoardDialog({ compact = false }: CreateBoardDialogProps) {
+export default function CreateBoardDialog({
+  compact = false,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+}: CreateBoardDialogProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const open = isControlled ? controlledOpen! : uncontrolledOpen;
+  const setOpen = isControlled
+    ? (next: boolean) => setControlledOpen?.(next)
+    : setUncontrolledOpen;
   const [selectedTemplateId, setSelectedTemplateId] = useState(DEFAULT_TEMPLATE_ID);
 
   const form = useForm<z.infer<typeof boardSchema>>({
@@ -94,7 +107,7 @@ export default function CreateBoardDialog({ compact = false }: CreateBoardDialog
         if (!next) resetDialog();
       }}
     >
-      {compact ? (
+      {!isControlled && (compact ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
@@ -112,7 +125,7 @@ export default function CreateBoardDialog({ compact = false }: CreateBoardDialog
             Create Board
           </Button>
         </DialogTrigger>
-      )}
+      ))}
 
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
