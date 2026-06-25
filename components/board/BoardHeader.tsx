@@ -111,7 +111,7 @@ export default function BoardHeader({ board, currentUserId }: BoardHeaderProps) 
   const { addTaskToColumn, deleteTaskFromColumn } = useBoardStore();
 
   const health = deriveHealth(columns);
-  const needsClientCount = columns.flatMap((c) => c.tasks).filter((t) => t.needsClient).length;
+  const needsClientCount = columns.flatMap((c) => c.tasks).filter((t) => t.needsClient && !t.clientReviewedAt).length;
 
   const HEALTH_CONFIG: Record<ProjectHealth, { label: string; cls: string; dot: string }> = {
     on_track: { label: 'On track', cls: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10', dot: 'bg-emerald-500' },

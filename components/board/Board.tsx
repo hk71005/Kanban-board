@@ -12,6 +12,7 @@ import {
   useSensor,
   useSensors,
   KeyboardSensor,
+  closestCorners,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
@@ -377,6 +378,7 @@ export default function Board({ initialBoardData, currentUserId, initialTaskId }
         ) : (
           <DndContext
             sensors={sensors}
+            collisionDetection={closestCorners}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             onDragOver={onDragOver}

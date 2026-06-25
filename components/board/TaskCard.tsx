@@ -106,12 +106,14 @@ export default function TaskCard({ task }: TaskCardProps) {
           )}
         </CardHeader>
         <CardContent className="px-3 pb-2.5 pt-0">
-          {task.needsClient && (
+          {(task.needsClient || task.clientReviewedAt) && (
             <div className="mb-1.5 flex flex-col gap-1">
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-                <Clock className="w-3 h-3" />
-                Waiting on client
-              </span>
+              {task.needsClient && !task.clientReviewedAt && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                  <Clock className="w-3 h-3" />
+                  Waiting on client
+                </span>
+              )}
               {task.clientReviewedAt && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
                   <Check className="w-3 h-3" />
