@@ -125,32 +125,34 @@ export default function TaskCard({ task }: TaskCardProps) {
             </div>
           )}
         </CardHeader>
-        <CardContent className="px-3 pb-2.5 pt-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-              {task.dueDate && <DueDateBadge dueDate={task.dueDate} />}
-              {(task.subtasks.length > 0 || task.comments.length > 0) && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {task.subtasks.length > 0 && (
-                    <span className="flex items-center gap-1">
-                      <CheckSquare className="w-3 h-3" />
-                      {completedSubtasks}/{task.subtasks.length}
-                    </span>
-                  )}
-                  {task.comments.length > 0 && (
-                    <span className="flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      {task.comments.length}
-                    </span>
-                  )}
-                </div>
+        {(task.dueDate || task.subtasks.length > 0 || task.comments.length > 0 || assigneeMember) && (
+          <CardContent className="px-3 pb-2.5 pt-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                {task.dueDate && <DueDateBadge dueDate={task.dueDate} />}
+                {(task.subtasks.length > 0 || task.comments.length > 0) && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {task.subtasks.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <CheckSquare className="w-3 h-3" />
+                        {completedSubtasks}/{task.subtasks.length}
+                      </span>
+                    )}
+                    {task.comments.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        {task.comments.length}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {assigneeMember && (
+                <UserAvatar name={assigneeMember.user.name} size="sm" />
               )}
             </div>
-            {assigneeMember && (
-              <UserAvatar name={assigneeMember.user.name} size="sm" />
-            )}
-          </div>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
     </div>
   );
