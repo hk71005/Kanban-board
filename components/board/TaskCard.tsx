@@ -88,7 +88,23 @@ export default function TaskCard({ task }: TaskCardProps) {
         className="rounded-lg cursor-grab active:cursor-grabbing transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
         style={accentStyle()}
       >
-        <CardHeader className="p-3 pb-1.5">
+        <CardHeader className="p-3 pb-2">
+          {/* Priority + status row at top */}
+          <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+            <PriorityBadge priority={task.priority} />
+            {task.needsClient && !task.clientReviewedAt && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 px-1.5 py-0.5 rounded-full">
+                <Clock className="w-3 h-3" />
+                Waiting
+              </span>
+            )}
+            {task.clientReviewedAt && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 px-1.5 py-0.5 rounded-full">
+                <Check className="w-3 h-3" />
+                Reviewed
+              </span>
+            )}
+          </div>
           <p className={`text-sm font-semibold leading-snug ${isDone ? 'line-through opacity-50' : ''}`}>{task.title}</p>
           {task.description && (
             <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">
@@ -110,47 +126,30 @@ export default function TaskCard({ task }: TaskCardProps) {
           )}
         </CardHeader>
         <CardContent className="px-3 pb-2.5 pt-0">
-          {(task.needsClient || task.clientReviewedAt) && (
-            <div className="mb-1.5 flex flex-col gap-1">
-              {task.needsClient && !task.clientReviewedAt && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-                  <Clock className="w-3 h-3" />
-                  Waiting on client
-                </span>
-              )}
-              {task.clientReviewedAt && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                  <Check className="w-3 h-3" />
-                  Client reviewed
-                </span>
-              )}
-            </div>
-          )}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-              <PriorityBadge priority={task.priority} />
               {task.dueDate && <DueDateBadge dueDate={task.dueDate} />}
+              {(task.subtasks.length > 0 || task.comments.length > 0) && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {task.subtasks.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <CheckSquare className="w-3 h-3" />
+                      {completedSubtasks}/{task.subtasks.length}
+                    </span>
+                  )}
+                  {task.comments.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" />
+                      {task.comments.length}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             {assigneeMember && (
               <UserAvatar name={assigneeMember.user.name} size="sm" />
             )}
           </div>
-          {(task.subtasks.length > 0 || task.comments.length > 0) && (
-            <div className="flex items-center gap-2.5 mt-2 text-xs text-muted-foreground">
-              {task.subtasks.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <CheckSquare className="w-3 h-3" />
-                  {completedSubtasks}/{task.subtasks.length}
-                </span>
-              )}
-              {task.comments.length > 0 && (
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3 h-3" />
-                  {task.comments.length}
-                </span>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
