@@ -231,6 +231,12 @@ export default function TaskForm({ task }: TaskFormProps) {
                 <Input
                   {...field}
                   readOnly={!canEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                  }}
                   className="h-auto min-h-0 border-none bg-transparent p-0 text-2xl font-bold leading-tight focus-visible:ring-0 focus-visible:border-transparent rounded-md hover:bg-muted/30 transition-colors cursor-text"
                 />
               </FormControl>
