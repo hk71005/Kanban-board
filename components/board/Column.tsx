@@ -3,7 +3,7 @@
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { ChevronRight, ChevronDown, MoreHorizontal, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, PlusCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
@@ -15,12 +15,6 @@ import { createTask } from '@/actions/task';
 import { deleteColumn, updateColumn } from '@/actions/board';
 import { useBoardStore } from '@/store/board';
 import { useUIStore } from '@/store/ui';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 interface ColumnProps {
@@ -48,12 +42,17 @@ export default function Column({ column }: ColumnProps) {
 
   const handleRename = () => {
     const trimmed = renameValue.trim();
-    if (!trimmed || trimmed === column.title) { setIsRenaming(false); return; }
+    const prevTitle = column.title;
+    if (!trimmed || trimmed === prevTitle) { setIsRenaming(false); return; }
     setIsRenaming(false);
+    renameColumnInStore(column.id, trimmed);
     startTransition(() => {
       updateColumn(column.id, trimmed).then((data) => {
-        if (data.error) { toast.error(data.error); setRenameValue(column.title); }
-        else renameColumnInStore(column.id, trimmed);
+        if (data.error) {
+          toast.error(data.error);
+          setRenameValue(prevTitle);
+          renameColumnInStore(column.id, prevTitle);
+        }
       });
     });
   };
@@ -233,7 +232,13 @@ export default function Column({ column }: ColumnProps) {
               className="h-6 py-0 px-1 text-sm font-semibold"
             />
           ) : (
-            <span className="truncate">{column.title}</span>
+            <span
+              className="truncate cursor-pointer hover:text-primary transition-colors"
+              onClick={() => { setRenameValue(column.title); setIsRenaming(true); }}
+              title="Click to rename"
+            >
+              {column.title}
+            </span>
           )}
           <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-muted text-muted-foreground shrink-0 min-w-[1.25rem]">
             {column.tasks.length}
@@ -249,37 +254,17 @@ export default function Column({ column }: ColumnProps) {
           >
             <ChevronDown className="w-4 h-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-8 h-8 shrink-0" aria-label="Column options">
-                <MoreHorizontal className="w-4 h-4" />
+          <ConfirmDialog
+            trigger={
+              <Button variant="ghost" size="icon" className="w-8 h-8 shrink-0 text-muted-foreground hover:text-destructive" aria-label="Delete column">
+                <Trash2 className="w-4 h-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={(e) => { e.preventDefault(); setRenameValue(column.title); setIsRenaming(true); }}
-                className="cursor-pointer"
-              >
-                <Pencil className="w-4 h-4 mr-2" />
-                Rename
-              </DropdownMenuItem>
-              <ConfirmDialog
-                trigger={
-                  <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()}
-                    className="text-destructive focus:text-destructive cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete column
-                  </DropdownMenuItem>
-                }
-                title="Delete column?"
-                description={`This will permanently delete "${column.title}" and all its tasks. This cannot be undone.`}
-                confirmText="Delete"
-                onConfirm={handleDeleteColumn}
-              />
-            </DropdownMenuContent>
-          </DropdownMenu>
+            }
+            title="Delete column?"
+            description={`This will permanently delete "${column.title}" and all its tasks. This cannot be undone.`}
+            confirmText="Delete"
+            onConfirm={handleDeleteColumn}
+          />
         </div>
       </div>
 
