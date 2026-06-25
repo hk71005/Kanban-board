@@ -56,7 +56,15 @@ export default async function BoardsPage() {
     include: {
       _count: { select: { columns: true, members: true } },
       columns: {
-        select: { color: true, _count: { select: { tasks: true } } },
+        select: {
+          color: true,
+          title: true,
+          _count: { select: { tasks: true } },
+          tasks: {
+            where: { needsClient: true, clientReviewedAt: null },
+            select: { id: true },
+          },
+        },
         orderBy: { order: 'asc' },
       },
     },
@@ -132,6 +140,7 @@ export default async function BoardsPage() {
           const accentColor = board.columns[0]?.color ?? '#7c3aed';
           const taskCount = totalTasks(board.columns);
           const colorDots = board.columns.slice(0, 3);
+          const waitingCount = board.columns.reduce((sum, col) => sum + col.tasks.length, 0);
           return (
             <Link href={`/boards/${board.id}`} key={board.id} className="group">
               <Card className="transition-all duration-200 ease-in-out hover:border-primary hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 h-full flex flex-col overflow-hidden">
@@ -143,10 +152,18 @@ export default async function BoardsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 pb-0 space-y-2">
-                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    <CheckSquare className="w-3 h-3" />
-                    {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                      <CheckSquare className="w-3 h-3" />
+                      {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
+                    </span>
+                    {waitingCount > 0 && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        <Clock className="w-3 h-3" />
+                        {waitingCount} waiting
+                      </span>
+                    )}
+                  </div>
                   {colorDots.length > 0 && (
                     <div className="flex items-center gap-1.5">
                       {colorDots.map((col, i) => (
@@ -154,7 +171,7 @@ export default async function BoardsPage() {
                           key={i}
                           className="w-2.5 h-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: col.color }}
-                          title={`Column ${i + 1}`}
+                          title={col.title}
                         />
                       ))}
                     </div>

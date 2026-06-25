@@ -257,7 +257,10 @@ export default async function SharePage({ params }: SharePageProps) {
       )}
 
       {/* ── Board ───────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 relative">
+        {/* Fade hint on mobile so clients know the board scrolls horizontally */}
+        <div className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-l from-background to-transparent" />
+        <div className="overflow-x-auto">
         <div className="flex gap-4 p-4 h-full min-h-[400px]">
           {board.columns.map((col) => (
             <div
@@ -363,6 +366,7 @@ export default async function SharePage({ params }: SharePageProps) {
               </div>
             </div>
           ))}
+        </div>
         </div>
       </div>
 

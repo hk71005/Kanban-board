@@ -92,6 +92,23 @@ export default function Navbar({ user, boards }: NavbarProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {/* Mobile: board switcher */}
+              {boards.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="md:hidden text-xs text-muted-foreground font-normal py-1">
+                    Your boards
+                  </DropdownMenuLabel>
+                  {boards.map((board) => (
+                    <DropdownMenuItem key={board.id} asChild className="md:hidden cursor-pointer">
+                      <Link href={`/boards/${board.id}`} className="flex items-center gap-2">
+                        <span className="text-sm">{board.emoji ?? '📋'}</span>
+                        <span className="truncate">{board.title}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator className="md:hidden" />
+                </>
+              )}
               <DropdownMenuItem asChild className="md:hidden cursor-pointer">
                 <Link href="/tasks" className="flex items-center">
                   <CheckSquare className="w-4 h-4 mr-2" />
